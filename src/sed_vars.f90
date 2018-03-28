@@ -103,11 +103,18 @@ module sed_vars
     end type outputPointInfo
     type(outputPointInfo) :: opin
 
+    type, extends(outputPointInfo) :: outputFieInfo
+        integer :: nField
+    end type outputFieInfo
+    type (outputFieInfo) :: ofin
+
     type outGrPoint
         integer :: grNumb, idsedclass
         character(len=15) :: varname, sedname
     end type outGrPoint
-    type(outGrPoint), dimension(:), allocatable :: ogrp
+    type(outGrPoint), dimension(:), allocatable :: ogrp, ofie
+
+
 
     type GridSize
         real :: DELX, DELY
@@ -126,7 +133,7 @@ module sed_vars
     real, dimension(:), allocatable:: imperCellAre
     integer, dimension(:), allocatable :: ipos, jpos
     integer, dimension(:,:), allocatable :: rank, next
-    real, dimension(:,:), allocatable  :: dummy
+    real, dimension(:,:), allocatable  :: dummy, variMat
     integer, dimension(:,:), allocatable  :: dummyI
     character(len=8), dimension(:,:), allocatable  :: dummyC
 

@@ -119,6 +119,9 @@ program mesh_sed
     !> Open the files to write time series at different grid points
     call openFilesForGrPointTS()
 
+    !> Open the files to write time series of fields (griddded data)
+    call openFilesForFieldTS()
+
     ! MAIN LOOP: ITERATION THROUGH TIME
 10  format('"',I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000"')
     do
@@ -242,15 +245,19 @@ program mesh_sed
         ! WRITE OUT MODEL PRONOSTIC VARIABLES
         !-----------------------------------------------------
         call writeGrPointTS
-
-
+        call writeFieldTS
 
 
         if (stopExec()) exit
 
     end do
 
+
+    !> Closing the files to write time series at different grid points
     call closeFilesForGrPointTS()
+
+    !> Closing the files to write time series of fields (griddded data)
+    call closeFilesForFieldTS()
 
     print *,'!------------------------------------------------------!'
     print *,'! ENDING : MESH-SED                                    !'

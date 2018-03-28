@@ -128,6 +128,20 @@ module sed_input
                 ogrp(i)%idsedclass = getIdSedClass(ogrp(i)%sedname)
                 !print *, ogrp(i)%grNumb, '  ',ogrp(i)%varname, '  ', ogrp(i)%sedname, ' ', ogrp(i)%idsedclass
             end do
+            read(unit = unitParam,fmt = *)
+            read(unit = unitParam,fmt = *) ofin%outputDir
+            read(unit = unitParam,fmt = *)
+            read(unit = unitParam,fmt = *) ofin%nField
+            read(unit = unitParam,fmt = *)
+            read(unit = unitParam,fmt = *)
+            allocate(ofie(ofin%nField))
+            do i = 1, ofin%nField
+                read(unit = unitParam, fmt = '(a15, a15)') ofie(i)%varname, ofie(i)%sedname
+                ofie(i)%idsedclass = getIdSedClass(ofie(i)%sedname)
+            end do
+
+
+
             !stop
 
 

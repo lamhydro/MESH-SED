@@ -17,7 +17,7 @@ module sed_config
             !allocate(cba%iniThickBed(NA), cba%soilTypeBed(NA), cba%soilTypeBank(NA))
 
             allocate(imperCellAre(NA), ipos(NA), jpos(NA), dummy(yCount, xCount), &
-                    dummyC(yCount,xCount), dummyI(yCount,xCount), grs(NA), &
+                    variMat(yCount, xCount), dummyC(yCount,xCount), dummyI(yCount,xCount), grs(NA), &
                     DISC(yCount,xCount), INFL(yCount,xCount), QDIF(yCount,xCount), &
                     DEPT(yCount,xCount), WIDT(yCount,xCount), VELO(yCount,xCount))
 
@@ -449,6 +449,8 @@ module sed_config
             (currDate%secs >= stopDate%secs)) then
 
                 stopExec = .true.
+            else
+                stopExec = .false.
             end if
         end function stopExec
 
