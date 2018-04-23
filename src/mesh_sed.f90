@@ -115,6 +115,36 @@ program mesh_sed
     !filenameWR = "WR_RUNOVF_H.r2c"
     !call openFile(unitOUTFIELDwr_runovf, filepath, filename)
 
+    !> Update time step
+    call currDate_update
+    write (dateIn, 10) currDate%year, &
+        currDate%month,  currDate%day,  currDate%hour, currDate%mins, currDate%secs
+    print *, 'DATE & TIME: ', dateIn
+
+    !> Open and read header of MET DATA input files
+    call getMat1_MESH_OUTFIELD(filepathOUTFIELD, filenamePR, unitPR, mat1PR, date1PR, mat2PR, date2PR, dateIn, iosPR)
+    !print *, date1PR, date2PR
+    !call readHeader_MESH_OUTFIELD(filepathOUTFIELD, filenameEV, unitEV, mat1EV, date1EV, dateIn, iosEV)
+    call getMat1_MESH_OUTFIELD(filepathOUTFIELD, filenameEV, unitEV, mat1EV, date1EV, mat2EV, date2EV, dateIn, iosEV)
+    !print *, date1EV, date2EV
+    !stop
+
+    !> Open and read header of OVERLAND FLOW DATA input file
+    call getMat1_MESH_OUTFIELD(filepathOUTFIELD, filenameWR, unitWR, mat1WR, date1WR, mat2WR, date2WR, dateIn, iosWR)
+
+    !> Open and read header of IN-STREAM FLOW DATA
+    call getMat1_rbm_input(filepathRBM, filenameRBM, unitRBM, mat1RBM1, date1RBM1, mat1RBM2, date1RBM2, &
+                                     mat1RBM3, date1RBM3, mat1RBM4, date1RBM4, mat1RBM5, date1RBM5, mat1RBM6, date1RBM6, &
+                                     mat2RBM1, date2RBM1, mat2RBM2, date2RBM2, mat2RBM3, date2RBM3, mat2RBM4, date2RBM4, &
+                                     mat2RBM5, date2RBM5, mat2RBM6, date2RBM6, dateIn, iosRBM)
+
+!    print *,   trim(date1RBM1), ' ', trim(date2RBM1)
+!    print *,   trim(date1RBM2), ' ', trim(date2RBM2)
+!    print *,   trim(date1RBM3), ' ', trim(date2RBM3)
+!    print *,   trim(date1RBM4), ' ', trim(date2RBM4)
+!    print *,   trim(date1RBM5), ' ', trim(date2RBM5)
+!    print *,   trim(date1RBM6), ' ', trim(date2RBM6)
+
 
     !> Open the files to write time series at different grid points
     call openFilesForGrPointTS()
@@ -126,44 +156,58 @@ program mesh_sed
 10  format('"',I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000"')
     do
 
-        call currDate_update
+        !call currDate_update
         !print *, currDate%year, ' ', currDate%month,' ',  currDate%day, ' ',currDate%jday, &
         !        ' ', currDate%hour, ' ',currDate%mins, ' ', currDate%secs
-
         !write (dateIn, '( '"',I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000"' )') currDate%year, &
-        write (dateIn, 10) currDate%year, &
-        currDate%month,  currDate%day,  currDate%hour, currDate%mins, currDate%secs
-        print *, 'DATE & TIME: ', dateIn
+        !write (dateIn, 10) currDate%year, &
+        !currDate%month,  currDate%day,  currDate%hour, currDate%mins, currDate%secs
+        !print *, 'DATE & TIME: ', dateIn
 
         !dateIn = '"'//"2002/01/30      1:15:20.000"//'"'
         !call parseDateTime(dateIn, currDate)
         !stop
 
-
-        !> READING MET DATA
+        !-----------------------------------------------------
+        ! READING INPUT DATA
+        !-----------------------------------------------------
+        !> INTERPOLATING MET DATA
         call readMetData
+        !print *, '->PREP: ', sum(mat1PR), ' ', sum(mv(:)%precip), ' ', sum(mat2PR)
+        !print *, '->EVAP: ', sum(mat1EV), ' ', sum(mv(:)%evapotran), ' ', sum(mat2EV)
 
-        !> READING OVERLAND FLOW DATA
+        !print *, date1PR, date2PR
+        !print *, 'Reading MET DATA'
+
+        !> INTERPOLATING OVERLAND FLOW DATA
         call readOverLandFlowData
+        !print *, date1WR, date2WR
+        !print *, 'OVERLAND FLOW DATA'
 
-        !> READING IN-STREAM FLOW DATA
+        !> INTERPOLATING IN-STREAM FLOW DATA
         call readInStreamFlowData
+        !print *, 'Reading IN-STREAM FLOW DATA'
+
+        !print *, sum(mv(:)%precip), " ",sum(mv(:)%evapotran), " ", sum(ofh(:)%discharge)," ", sum(rh(:)%discharge)
 
         !-----------------------------------------------------
         ! HILLSLOPE TRANSPORT
         !-----------------------------------------------------
         !> Raindrop detachment
         call rainDropDetachCell()
+        !print *, minval(D_R(:)), ' ', maxval(D_R(:))
         !do i=1,NA
             !write(*,'(13(F15.2))')  D_R(i,:)
-        !    print*, mv(i)%precip, ' ', D_R(i)
+            !print*, mv(i)%precip, ' ', D_R(i)
         !end do
 
         !> Overland flow detachment
         call overlandFlowDetachCell()
+        !print *, minval(D_F(:)), ' ', maxval(D_F(:))
         !do i=1,NA
             !write(*,'(13(F15.2))')  D_F(i,:)
-        !    pr
+        !    print *, D_F(i)
+        !end do
 
         ! Calculate variables at the cell edges
          call varsAtCellEdge()
@@ -175,7 +219,7 @@ program mesh_sed
         call overlandFlowTransCapa_outCell()
         !do i=1,NA
             !write(*,'(13(F15.2))')  G(i,:)
-        !    print*, i, G_out(i)%east, G_out(i)%north, G_out(i)%west, G_out(i)%south
+            !print*, i, G_out(i)%east, G_out(i)%north, G_out(i)%west, G_out(i)%south
         !end do
 
         ! Initilize variables
@@ -185,10 +229,14 @@ program mesh_sed
         !print*,
         !print*, '----2----'
         call potentialSedConc()
+        !print *, minval(csa(:)%C), ' ', maxval(csa(:)%C)
         !do i=1,NA
             !write(*,'(13(F15.2))')  G(i,:)
             !print*, i, F(i)%nfluxes, F(i)%east, F(i)%north, F(i)%west, F(i)%south !C(i)
-        !    print*, csa(i)%C
+            !do j = 1, nsedpar
+            !    print*, i, ' ', csa(i)%C(j)
+            !    if (isnan(csa(i)%C(j))) stop '"x" is a NaN' ! HERERERERERERERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+            !end do
         !end do
 
         !- 3) Estimate potential change in surface elevation
@@ -197,6 +245,7 @@ program mesh_sed
         call potentialChanSufEle()
         !do i=1,NA
         !    print*, csa(i)%pot_Dz
+        !    if (isnan(csa(i)%pot_Dz)) stop '"x" is a NaN'
         !end do
 
         !- 4) Estimate available change in surface elevation
@@ -204,15 +253,21 @@ program mesh_sed
         !print*, '----4----'
         call availableChanSufEle()
         !do i=1,NA
-        !    print*, csa(i)%ava_Dz
+            !print*, csa(i)%ava_Dz
+            !if (isnan(csa(i)%ava_Dz)) stop '"x" is a NaN'
         !end do
+        !print *, sum(csa(:)%ava_Dz)/NA
+
 
         !- 5) Compare pot_Dz vs. ava_Dz
         !print*,
         !print*, '----5----'
         call cellConAndChanSufEle()
         !do i=1,NA
-        !    print*, csa(i)%Dz, csa(i)%SD
+            !print*, csa(i)%Dz, csa(i)%SD, sum(csa(i)%C(:))
+            !if (isnan(csa(i)%Dz)) stop '"x" is a NaN'
+            !if (isnan(csa(i)%SD)) stop '"x" is a NaN'
+            !if (isnan(sum(csa(i)%C))) stop '"x" is a NaN'
         !end do
 
         !-----------------------------------------------------
@@ -221,6 +276,10 @@ program mesh_sed
         ! Instream routing
         ! - Longitudinal sediment velocity
         call longSedVelocity_grid
+        !do i = 1, NA
+        !    print *, sum(isrr(i)%Vs(:))
+        !    if (isnan(sum(isrr(i)%Vs(:)))) stop '"x" is a NaN'
+        !end do
 
         ! - Sediment inflow to channel
         ! -- Channel bank erosion
@@ -230,9 +289,14 @@ program mesh_sed
 
         ! - In-stream sediment routing
         call inStreamRouting
-        !do i=1,NA
-        !    print*, isrr(i)%G
-        !end do
+        do i=1,NA
+            do j = 1, nsedpar
+                !print*, i, j, isrr(i)%G(j), isrr(i)%C(j)
+            end do
+            !if (isnan(sum(isrr(i)%G(:))/nsedpar)) stop '"G" is a NaN'
+            !if (isnan(sum(isrr(i)%C(:))/nsedpar)) stop '"C" is a NaN'
+        end do
+        !stop
         ! - Update frac diameters in active and parent layers
         call setFracDiame
 
@@ -250,7 +314,25 @@ program mesh_sed
 
         if (stopExec()) exit
 
+        !-----------------------------------------------------
+        ! UPDATE AND PRINT DATE AND TIME
+        !-----------------------------------------------------
+        call currDate_update
+        write (dateIn, 10) currDate%year, &
+        currDate%month,  currDate%day,  currDate%hour, currDate%mins, currDate%secs
+        print *, 'DATE & TIME: ', dateIn
+
     end do
+
+    !> Clossing MET DATA files
+    call close_MESH_OUTFIELD(unitPR)
+    call close_MESH_OUTFIELD(unitEV)
+
+    !> Clossing OVERLAND FLOW DATA file
+    call close_MESH_OUTFIELD(unitWR)
+
+    !> Clossing IN-STREAM FLOW DATA file
+    call close_MESH_OUTFIELD(unitRBM)
 
 
     !> Closing the files to write time series at different grid points

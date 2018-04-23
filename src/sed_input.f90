@@ -165,6 +165,7 @@ module sed_input
             character(len=15), intent(in) :: sedname
             integer :: i
 
+            getIdSedClass = 0
             do i = 1, nsedpar
                 if (trim(sp(i)%name) == trim(sedname)) then
                     getIdSedClass = i
@@ -218,7 +219,9 @@ module sed_input
             end do
             do i = 1, NA
                 gca(i)%soilType = dummyI(ipos(i),jpos(i)) !tempoI(ipos(i),jpos(i))
+                !print *, i, ipos(i),jpos(i), gca(i)%soilType
             end do
+            !stop
 
             read(unit = unitGrid,fmt = *)
             do i = 1, yCount
@@ -575,15 +578,20 @@ module sed_input
 
             !>- Read precipitation data
             !call read_MESH_OUTFIELD(unitOUTFIELDprecip, dummy, dateTime)
-            call interp_MESH_OUTFIELD(filepathOUTFIELD, filenamePR, dummy, dateIn)
+
+            !call interp_MESH_OUTFIELD(filepathOUTFIELD, filenamePR, dummy, dateIn)
+            call interp2_MESH_OUTFIELD(unitPR, mat1PR, date1PR, mat2PR, date2PR, dummy, dateIn, iosPR)
             do i = 1, NA
-                mv(i)%precip = dummy(ipos(i),jpos(i))
+                mv(i)%precip = dummy(ipos(i),jpos(i)) ! In mm/h
             end do
-            !>- Read precipitation data
+
+            !>- Read evapotranspiration data
             !call read_MESH_OUTFIELD(unitOUTFIELDevap, dummy, dateTime)
-            call interp_MESH_OUTFIELD(filepathOUTFIELD, filenameEV, dummy, dateIn)
+
+            !call interp_MESH_OUTFIELD(filepathOUTFIELD, filenameEV, dummy, dateIn)
+            call interp2_MESH_OUTFIELD(unitEV, mat1EV, date1EV, mat2EV, date2EV, dummy, dateIn, iosEV)
             do i = 1, NA
-                mv(i)%evapotran = dummy(ipos(i),jpos(i))
+                mv(i)%evapotran = dummy(ipos(i),jpos(i)) ! In mm/h
             end do
         end subroutine readMetData
 
@@ -592,9 +600,12 @@ module sed_input
             implicit none
 
             !call read_MESH_OUTFIELD(unitOUTFIELDwr_runovf, dummy, dateTime)
-            call interp_MESH_OUTFIELD(filepathOUTFIELD, filenameWR, dummy, dateIn)
+
+            !call interp_MESH_OUTFIELD(filepathOUTFIELD, filenameWR, dummy, dateIn)
+            call interp2_MESH_OUTFIELD(unitWR, mat1WR, date1WR, mat2WR, date2WR, dummy, dateIn, iosWR)
+
             do i = 1, NA
-                ofh(i)%discharge = (dummy(ipos(i),jpos(i))/1000)*shd%AREA(ipos(i),jpos(i))/3600 ! Discharge in the cell in m3/s. 1h=3600s
+                ofh(i)%discharge = (dummy(ipos(i),jpos(i))/1000)*shd%AREA(ipos(i),jpos(i))/3600 ! From mm per hour to m3/s. Discharge in the cell in m3/s. 1h=3600s
                 ofh(i)%depth = (0.34*ofh(i)%discharge**0.341)*1000.             ! Water depth in mm According to Allen et al, 1994
                 ofh(i)%slope = shd%SLOPE_CHNL(ipos(i),jpos(i))                ! Water surface slope.
                 ofh(i)%width = sqrt( shd%AREA(ipos(i),jpos(i)) )                 ! Flow width = cell width (m).
@@ -605,6 +616,13 @@ module sed_input
                 end if
 
             end do
+            !print *, '->AREA', minval(ofh(:)%width)**2, ' ', maxval(ofh(:)%width)**2
+!            print *, '->DIS (m3/s): ', minval(ofh(:)%discharge), ' ', maxval(ofh(:)%discharge)
+!            print *, '->DE (mm): ', minval(ofh(:)%depth), ' ', maxval(ofh(:)%depth)
+!            print *, '->SL (mm): ', minval(ofh(:)%slope), ' ', maxval(ofh(:)%slope)
+!            print *, '->WI (mm): ', minval(ofh(:)%width), ' ', maxval(ofh(:)%width)
+!            print *, '->VE (mm): ', minval(ofh(:)%velocity), ' ', maxval(ofh(:)%velocity)
+
         end subroutine readOverLandFlowData
 
 
@@ -612,12 +630,27 @@ module sed_input
             implicit none
 
             !call read_rbm_input(unit_rbm_input, DISC, INFL, QDIF, DEPT, WIDT, VELO, dateTime)
-            call interp_rbm_input(filepathRBM, filenameRBM, DISC, dateIn, 1)
-            call interp_rbm_input(filepathRBM, filenameRBM, INFL, dateIn, 2)
-            call interp_rbm_input(filepathRBM, filenameRBM, QDIF, dateIn, 3)
-            call interp_rbm_input(filepathRBM, filenameRBM, DEPT, dateIn, 4)
-            call interp_rbm_input(filepathRBM, filenameRBM, WIDT, dateIn, 5)
-            call interp_rbm_input(filepathRBM, filenameRBM, VELO, dateIn, 6)
+
+            !call interp_rbm_input(filepathRBM, filenameRBM, DISC, dateIn, 1)
+            !call interp_rbm_input(filepathRBM, filenameRBM, INFL, dateIn, 2)
+            !call interp_rbm_input(filepathRBM, filenameRBM, QDIF, dateIn, 3)
+            !call interp_rbm_input(filepathRBM, filenameRBM, DEPT, dateIn, 4)
+            !call interp_rbm_input(filepathRBM, filenameRBM, WIDT, dateIn, 5)
+            !call interp_rbm_input(filepathRBM, filenameRBM, VELO, dateIn, 6)
+
+            call interp2_rbm_input(unitRBM, mat1RBM1, date1RBM1, mat1RBM2, date1RBM2, &
+                                     mat1RBM3, date1RBM3, mat1RBM4, date1RBM4, mat1RBM5, date1RBM5, mat1RBM6, date1RBM6, &
+                                     mat2RBM1, date2RBM1, mat2RBM2, date2RBM2, mat2RBM3, date2RBM3, mat2RBM4, date2RBM4, &
+                                     mat2RBM5, date2RBM5, mat2RBM6, date2RBM6, DISC, INFL, QDIF, DEPT, WIDT, &
+                                     VELO, dateIn, iosRBM)
+
+!            print *, '->DISC : ', sum(mat1RBM1), ' ',sum(DISC) ,' ', sum(mat2RBM1)
+!            print *, '->INFL : ', sum(mat1RBM2), ' ',sum(INFL) ,' ', sum(mat2RBM2)
+!            print *, '->QDIF : ', sum(mat1RBM3), ' ',sum(QDIF) ,' ', sum(mat2RBM3)
+!            print *, '->DEPT : ', sum(mat1RBM4), ' ',sum(DEPT) ,' ', sum(mat2RBM4)
+!            print *, '->WIDT : ', sum(mat1RBM5), ' ',sum(WIDT) ,' ', sum(mat2RBM5)
+!            print *, '->VELO : ', sum(mat1RBM6), ' ',sum(VELO) ,' ', sum(mat2RBM6)
+
             do i = 1, NA
                 rh(i)%slope = shd%SLOPE_CHNL(ipos(i),jpos(i)) ! In-stream water surface slope. It is aproximate to the channel bottom slope.
                 rh(i)%velocity = VELO(ipos(i),jpos(i)) ! Channel flow velocity (m/s)
@@ -625,8 +658,557 @@ module sed_input
                 rh(i)%depth = DEPT(ipos(i),jpos(i)) ! Channel water depth (m)
                 rh(i)%discharge = DISC(ipos(i),jpos(i)) ! In-stream discharge (m3/s). Assume a rectagular section
                 rh(i)%length = shd%CHNL_LEN(ipos(i),jpos(i)) ! Channel reach length
+                if (i == 1325 ) then
+                    print *, '-->', i, rh(i)%velocity, rh(i)%depth, 0.34*rh(i)%discharge**0.341, rh(i)%width, rh(i)%discharge
+                end if
+
             end do
+!            print *, '->DISC : ', minval(rh(:)%discharge), ' ',maxval(rh(:)%discharge)
+!            print *, '->INFL : ', minval(INFL), ' ',maxval(INFL)
+!            print *, '->DEPT : ', minval(rh(:)%depth), ' ',maxval(rh(:)%depth)
+!            print *, '->WIDT : ', minval(rh(:)%width), ' ',maxval(rh(:)%width)
+!            print *, '->VELO : ', minval(rh(:)%velocity), ' ',maxval(rh(:)%velocity)
+!            print *, '->LENG : ', minval(rh(:)%length), ' ',maxval(rh(:)%length)
+
         end subroutine readInStreamFlowData
+
+        subroutine readHeader_MESH_OUTPUTFILES(filepath, filename, fileunit, ios)
+            implicit none
+            character(len=80), intent(in) :: filename
+            character(len=150), intent(in) :: filepath
+            integer, intent(in) :: fileunit
+            integer, intent(out) :: ios
+
+            character(len=80) :: line
+            !real :: secs11
+            !integer :: ios = 0
+
+            !> Open the file
+            open(unit = fileunit, &
+                !file=trim(ADJUSTL(MESHdir)) // trim(ADJUSTL(OUTFIELDfolder)) // "/" // &
+                 !trim(ADJUSTL(metVar)) //  ".r2c", &
+                file =  trim(ADJUSTL(filepath)) // trim(ADJUSTL(filename)), &
+                status="old", &
+                action="read", &
+                iostat=ios)
+
+            if (ios /= 0) then
+                close(unit = fileunit)
+                print *, "The file ", trim(ADJUSTL(filename)), " could not be opened."
+                print *, "Stopping..."
+                stop
+            else
+                !print *, 'OPENING: ', trim(ADJUSTL(filename))
+            end if
+
+            !> Read the header
+            do
+                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                if (trim(line) .eq. ':endHeader') exit
+            end do
+        end subroutine readHeader_MESH_OUTPUTFILES
+
+        subroutine getMat1_MESH_OUTFIELD(filepath, filename, fileunit, mat1, date1, mat2, date2, inDate, ios)
+            implicit none
+
+            character(len=80), intent(in) :: filename
+            character(len=150), intent(in) :: filepath
+            integer, intent(in) :: fileunit
+            character(len=80), intent(in) :: inDate
+            character(len=80), intent(out) :: date1, date2
+            integer, intent(inout) :: ios
+            real, dimension(:,:), intent(out) :: mat1, mat2
+
+            type(IterDate) :: dateC, date11
+            character(len=80) :: line
+            integer :: i
+
+            call readHeader_MESH_OUTPUTFILES(filepath, filename, fileunit, ios)
+
+            call parseDateTime(inDate, dateC)
+            ! NOTE: MESH gridded output files go from 1H to 24H. Our program begin 0H and end at 23H.
+            ! 1 is added below to adjust our hour accoridingly.
+            dateC%hour = dateC%hour + 1
+            !secsC = dateC%hour*3600 + dateC%mins*60 + dateC%secs
+
+            do while(ios.eq.0)
+
+                !> Read lines to omit
+                !do i = 1, (yCount+2)*(varOrder-1)
+                !      read(unit=fileunit, FMT='((A))', iostat=ios) line
+                !end do
+
+                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                date1 = trim(line(index(line, '"'):len_trim(line)))
+                call parseDateTime(date1, date11)
+                do i = 1, yCount
+                    read(unit = fileunit, fmt = *, iostat=ios) mat1(i,:)
+                end do
+                read(unit = fileunit, fmt = *, iostat=ios)
+
+
+                if (date11%year == dateC%year) then
+                    if (date11%month == dateC%month) then
+                        if (date11%day == dateC%day) then
+                            if (date11%hour == dateC%hour) then
+                                exit
+                            end if
+                        end if
+                    end if
+                end if
+            end do
+
+            call getMat2_MESH_OUTFIELD(fileunit, mat2, date2, ios)
+        end subroutine getMat1_MESH_OUTFIELD
+
+
+
+
+!        subroutine getMat1_MESH_OUTFIELD(filepath, filename, fileunit, mat1, date1, mat2, date2, inDate, ios)
+!            implicit none
+!
+!            character(len=80), intent(in) :: filename
+!            character(len=150), intent(in) :: filepath
+!            integer, intent(in) :: fileunit
+!            character(len=80), intent(in) :: inDate
+!            character(len=80), intent(out) :: date1, date2
+!            integer, intent(inout) :: ios
+!            real, dimension(:,:), intent(out) :: mat1, mat2
+!
+!            type(IterDate) :: dateC, date11
+!            character(len=80) :: line
+!
+!            call readHeader_MESH_OUTPUTFILES(filepath, filename, fileunit, ios)
+!
+!            call parseDateTime(inDate, dateC)
+!            ! NOTE: MESH gridded output files go from 1H to 24H. Our program begin 0H and end at 23H.
+!            ! 1 is added below to adjust our hour accoridingly.
+!            dateC%hour = dateC%hour + 1
+!            !secsC = dateC%hour*3600 + dateC%mins*60 + dateC%secs
+!
+!            do while(ios.eq.0)
+!
+!                read(unit=fileunit, FMT='((A))', iostat=ios) line
+!                date1 = trim(line(index(line, '"'):len_trim(line)))
+!                call parseDateTime(date1, date11)
+!                do i = 1, yCount
+!                    read(unit = fileunit, fmt = *, iostat=ios) mat1(i,:)
+!                end do
+!                read(unit = fileunit, fmt = *, iostat=ios)
+!
+!
+!                if (date11%year == dateC%year) then
+!                    if (date11%month == dateC%month) then
+!                        if (date11%day == dateC%day) then
+!                            if (date11%hour == dateC%hour) then
+!                                exit
+!                            end if
+!                        end if
+!                    end if
+!                end if
+!            end do
+!
+!            call getMat2_MESH_OUTFIELD(fileunit, mat2, date2, ios)
+!        end subroutine getMat1_MESH_OUTFIELD
+
+
+        subroutine getMat2_MESH_OUTFIELD(fileunit, mat2, date2, ios)
+            implicit none
+                integer, intent(in) :: fileunit
+                character(len=80), intent(out) :: date2
+                integer, intent(inout) :: ios
+                real, dimension(:,:), intent(out) :: mat2
+
+                character(len=80) :: line
+
+                !> Read lines to omit
+                !do i = 1, (yCount+2)*(varOrder-1)
+                !      read(unit=fileunit, FMT='((A))', iostat=ios) line
+                !end do
+
+                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                date2 = trim(line(index(line, '"'):len_trim(line)))
+                !call parseDateTime(date1, date11)
+                do i = 1, yCount
+                    read(unit = fileunit, fmt = *, iostat=ios) mat2(i,:)
+                end do
+                read(unit = fileunit, fmt = *, iostat=ios)
+        end subroutine getMat2_MESH_OUTFIELD
+
+
+        subroutine interp2_MESH_OUTFIELD(fileunit, mat1, date1, mat2, date2, matF, inDate, ios)
+            implicit none
+
+            integer, intent(in) :: fileunit
+            character(len=80), intent(inout) :: date1, date2
+            real, dimension(:,:), intent(inout) :: mat1, mat2
+            character(len=80), intent(in) :: inDate
+            integer, intent(inout) :: ios
+            real, dimension(:,:), intent(out) :: matF
+
+
+            !real, dimension(yCount,xCount) :: matF
+            type(IterDate) :: dateC, date22
+            real :: secsC
+            !real :: dsecs11
+
+            call parseDateTime(inDate, dateC)
+            secsC = dateC%mins*60 + dateC%secs
+
+            !call parseDateTime(date1, date11)
+            !secs11 = date11%mins*60 + date11%secs
+
+            call parseDateTime(date2, date22)
+            !secs22 = date22%mins*60 + date22%secs
+
+            if (dateC%year == date22%year) then
+                if (dateC%month == date22%month) then
+                    if (dateC%day == date22%day) then
+                        if (dateC%hour+1 == date22%hour) then
+                            if (secsC >= 0.0) then
+                                date1 = date2
+                                mat1 = mat2
+                                call getMat2_MESH_OUTFIELD(fileunit, mat2, date2, ios)
+                            end if
+                        end if
+                    end if
+                end if
+            end if
+
+            !dsecs11 = secsC - secs11
+            !matF = (mat2-mat1)*(dsecs11/3600) + mat1
+            matF = (mat2-mat1)*(secsC/3600) + mat1
+
+        end subroutine interp2_MESH_OUTFIELD
+
+
+
+        subroutine getMat1_rbm_input(filepath, filename, fileunit, mat11, date11, mat12, date12, &
+                                     mat13, date13, mat14, date14, mat15, date15, mat16, date16, &
+                                     mat21, date21, mat22, date22, mat23, date23, mat24, date24, &
+                                     mat25, date25, mat26, date26, inDate, ios)
+            implicit none
+
+            character(len=80), intent(in) :: filename
+            character(len=150), intent(in) :: filepath
+            integer, intent(in) :: fileunit
+            character(len=80), intent(in) :: inDate
+            character(len=80), intent(out) :: date11, date12, date13, date14, date15, date16, &
+                                              date21, date22, date23, date24, date25, date26
+            integer, intent(inout) :: ios
+            real, dimension(:,:), intent(out) :: mat11, mat12, mat13, mat14, mat15, mat16, &
+                                                 mat21, mat22, mat23, mat24, mat25, mat26
+
+            type(IterDate) :: dateC, date111
+            character(len=80) :: line
+            integer :: i
+
+            call readHeader_MESH_OUTPUTFILES(filepath, filename, fileunit, ios)
+
+            call parseDateTime(inDate, dateC)
+            ! NOTE: MESH gridded output files go from 1H to 24H. Our program begin 0H and end at 23H.
+            ! 1 is added below to adjust our hour accoridingly.
+            dateC%hour = dateC%hour + 1
+            !secsC = dateC%hour*3600 + dateC%mins*60 + dateC%secs
+
+            do while(ios.eq.0)
+
+                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                date11 = trim(line(index(line, '"'):len_trim(line)))
+                call parseDateTime(date11, date111)
+                do i = 1, yCount
+                    read(unit = fileunit, fmt = *, iostat=ios) mat11(i,:)
+                end do
+                read(unit = fileunit, fmt = *, iostat=ios)
+
+
+                if (date111%year == dateC%year) then
+                    if (date111%month == dateC%month) then
+                        if (date111%day == dateC%day) then
+                            if (date111%hour == dateC%hour) then
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date12 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat12(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date13 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat13(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date14 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat14(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date15 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat15(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date16 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat16(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                exit
+                            end if
+                        end if
+                    end if
+                end if
+            end do
+
+            call getMat2_rbm_input(fileunit, mat21, date21, mat22, date22, mat23, date23, &
+                                     mat24, date24, mat25, date25, mat26, date26, ios)
+        end subroutine getMat1_rbm_input
+
+
+        subroutine getMat2_rbm_input(fileunit, mat21, date21, mat22, date22, mat23, date23, &
+                                     mat24, date24, mat25, date25, mat26, date26, ios)
+            implicit none
+            integer, intent(in) :: fileunit
+            character(len=80), intent(out) :: date21, date22, date23, date24, date25, date26
+            integer, intent(inout) :: ios
+            real, dimension(:,:), intent(out) :: mat21, mat22, mat23, mat24, mat25, mat26
+
+            character(len=80) :: line
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date21 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat21(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date22 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat22(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date23 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat23(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date24 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat24(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date25 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat25(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date26 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat26(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+        end subroutine getMat2_rbm_input
+
+        subroutine interp2_rbm_input(fileunit, mat11, date11, mat12, date12, &
+                                     mat13, date13, mat14, date14, mat15, date15, mat16, date16, &
+                                     mat21, date21, mat22, date22, mat23, date23, mat24, date24, &
+                                     mat25, date25, mat26, date26, matF1, matF2, matF3, matF4, matF5, &
+                                     matF6, inDate, ios)
+            implicit none
+
+            integer, intent(in) :: fileunit
+            character(len=80), intent(inout) :: date11, date12, date13, date14, date15, date16, &
+                                                date21, date22, date23, date24, date25, date26
+            real, dimension(:,:), intent(inout) :: mat11, mat12, mat13, mat14, mat15, mat16, &
+                                                   mat21, mat22, mat23, mat24, mat25, mat26
+            character(len=80), intent(in) :: inDate
+            integer, intent(inout) :: ios
+            real, dimension(:,:), intent(out) :: matF1, matF2, matF3, matF4, matF5, matF6
+
+
+            !real, dimension(yCount,xCount) :: matF
+            type(IterDate) :: dateC, date222
+            real :: secsC
+            !real :: dsecs11
+
+            call parseDateTime(inDate, dateC)
+            secsC = dateC%mins*60 + dateC%secs
+
+            call parseDateTime(date21, date222)
+
+            if (dateC%year == date222%year) then
+                if (dateC%month == date222%month) then
+                    if (dateC%day == date222%day) then
+                        if (dateC%hour+1 == date222%hour) then
+                            if (secsC >= 0.0) then
+                                date11 = date21
+                                mat11 = mat21
+
+                                date12 = date22
+                                mat12 = mat22
+
+                                date13 = date23
+                                mat13 = mat23
+
+                                date14 = date24
+                                mat14 = mat24
+
+                                date15 = date25
+                                mat15 = mat25
+
+                                date16 = date26
+                                mat16 = mat26
+
+                                call getMat2_rbm_input(fileunit, mat21, date21, mat22, date22, mat23, date23, &
+                                     mat24, date24, mat25, date25, mat26, date26, ios)
+                            end if
+                        end if
+                    end if
+                end if
+            end if
+
+            !dsecs11 = secsC - secs11
+            !matF = (mat2-mat1)*(dsecs11/3600) + mat1
+            matF1 = (mat21-mat11)*(secsC/3600) + mat11
+            matF2 = (mat22-mat12)*(secsC/3600) + mat12
+            matF3 = (mat23-mat13)*(secsC/3600) + mat13
+            matF4 = (mat24-mat14)*(secsC/3600) + mat14
+            matF5 = (mat25-mat15)*(secsC/3600) + mat15
+            matF6 = (mat26-mat16)*(secsC/3600) + mat16
+
+        end subroutine interp2_rbm_input
+
+
+
+!        subroutine intep2_MESH_OUTFIELD(fileunit, mat1, date1, matF, inDate, ios)
+!            implicit none
+!            integer, intent(in) :: fileunit
+!            real, dimension(:,:), intent(out) :: matF
+!            real, dimension(:,:), intent(inout) :: mat1
+!            character(len=80), intent(in) :: inDate
+!            character(len=80), intent(inout) :: date1
+!            integer :: ios
+!
+!            real, dimension(yCount,xCount) :: mat2
+!            character(len=80) :: line, date2
+!            type(IterDate) :: dateC, date11, date22
+!            real :: secsC, secs11
+!
+!            call parseDateTime(inDate, dateC)
+!            ! NOTE: MESH gridded output files go from 1H to 24H. Our program begin 0H and end at 23H.
+!            ! 1 is added below to adjust our hour accoridingly.
+!            dateC%hour = dateC%hour + 1
+!            secsC = dateC%mins*60 + dateC%secs
+!
+!            call parseDateTime(date1, date11)
+!            secs11 = date11%mins*60 + date11%secs
+!
+!            read(unit=fileunit, FMT='((A))', iostat=ios) line
+!            date2 = trim(line(index(line, '"'):len_trim(line)))
+!            call parseDateTime(date2, date22)
+!            do i = 1, yCount
+!                read(unit = fileunit, fmt = *, iostat=ios) mat2(i,:)
+!            end do
+!            read(unit = fileunit, fmt = *, iostat=ios)
+!
+!            dsecs11 = secsC - secs11
+!            matF = (mat2-mat1)*(dsecs11/3600) + mat1
+!            date1 = date2
+!            mat1 = mat2
+!
+!        end subroutine intep2_MESH_OUTFIELD
+
+
+!        subroutine intep2_MESH_OUTFIELD(fileunit, mat1, date1, matF, inDate, ios)
+!            implicit none
+!            integer, intent(in) :: fileunit
+!            real, dimension(:,:), intent(out) :: matF
+!            real, dimension(:,:), intent(inout) :: mat1
+!            character(len=80), intent(in) :: inDate
+!            character(len=80), intent(inout) :: date1
+!            integer :: ios
+!
+!            real, dimension(yCount,xCount) :: mat2
+!            character(len=80) :: line, date2
+!            type(IterDate) :: dateC, date11, date22
+!            real :: secsC, secs11, dsecs11
+!
+!
+!            call parseDateTime(inDate, dateC)
+!            ! NOTE: MESH gridded output files go from 1H to 24H. Our program begin 0H and end at 23H.
+!            ! 1 is added below to adjust our hour accoridingly.
+!            dateC%hour = dateC%hour + 1
+!            secsC = dateC%mins*60 + dateC%secs
+!
+!            call parseDateTime(date1, date11)
+!            secs11 = date11%mins*60 + date11%secs
+!
+!            do while(ios.eq.0)
+!
+!                read(unit=fileunit, FMT='((A))', iostat=ios) line
+!                date2 = trim(line(index(line, '"'):len_trim(line)))
+!                call parseDateTime(date2, date22)
+!                do i = 1, yCount
+!                    read(unit = fileunit, fmt = *, iostat=ios) mat2(i,:)
+!                end do
+!                read(unit = fileunit, fmt = *, iostat=ios)
+!
+!
+!!                if (date22%year >= dateC%year) then
+!!                    if (date22%month <= dateC%month) then
+!!                        if (date22%day <= dateC%day) then
+!
+!                if (date11%year == dateC%year .or. date22%year == dateC%year) then
+!                    if (date11%month == dateC%month .or. date22%month == dateC%month) then
+!                        if (date11%day == dateC%day .or. date22%day == dateC%day) then
+!                            !secs22 = date22%hour*3600 + date22%mins*60 + date22%secs
+!                            if (dateC%hour + 1 == date22%hour + 1) then
+!
+!                                dsecs11 = secsC - secs11
+!                                matF = (mat2-mat1)*(dsecs11/3600) + mat1
+!
+!                                exit
+!                            end if
+!!                            if (dateC%hour == 0)then
+!!                                dsecs11 = secsC
+!!                                matF = (mat2-mat1)*(dsecs11/3600) + mat1
+!!                                !print *,'date1 ', date1
+!!                                !print *,'date2 ', date2
+!!                                exit
+!!                            end if
+!                        end if
+!                    end if
+!                end if
+!                date1 = date2
+!                mat1 = mat2
+!            end do
+!        end subroutine intep2_MESH_OUTFIELD
+
+
+        subroutine close_MESH_OUTFIELD(fileunit)
+            implicit none
+            integer, intent(in) :: fileunit
+            close(unit = fileunit)
+        end subroutine close_MESH_OUTFIELD
 
 
         !> Inerpolate matrix in MESH OUTFIELDS files
@@ -759,6 +1341,9 @@ module sed_input
             close(unit = fileunit)
 
         end subroutine interp_MESH_OUTFIELD
+
+
+
 
 
         !> Inerpolate matrix in rbm_input_file

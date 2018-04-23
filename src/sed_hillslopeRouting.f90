@@ -73,7 +73,7 @@ module sed_hillslopeRouting
             implicit none
 
             !real :: discharge_east, discharge_north, discharge_west, discharge_south, acumFrac
-            real :: FQeast, FQnorth, FQwest, FQsouth
+            real :: FQeast, FQnorth, FQwest, FQsouth, aux
 
             call inOutCellFluxes()
 
@@ -99,6 +99,9 @@ module sed_hillslopeRouting
                     FQsouth = F(i)%south/discharge_edge(i)%south
                 end if
 
+                !print *, i, FQeast,' ' ,FQnorth, ' ',FQwest, ' ',FQsouth, ' ', F(i)
+
+                aux = (FQeast + FQnorth + FQwest + FQsouth)/F(i)%nfluxes
                 do j = 1, nsedpar
                     !C(i) = C_out(cn(i)%east)%east + C_out(cn(i)%north)%north + C_out(cn(i)%west)%west + C_out(cn(i)%south)%south
                     !if (C_out(i)%east == 0.) then
@@ -107,7 +110,7 @@ module sed_hillslopeRouting
 
 
 
-                    csa(i)%C(j) = sca(i)%frac(j)*(FQeast + FQnorth + FQwest + FQsouth)/F(i)%nfluxes
+                    csa(i)%C(j) = sca(i)%frac(j)*aux
 
         !            C(i) = (F(i)%east/discharge_edge(i)%east + F(i)%north/discharge_edge(i)%north +&
         !                    F(i)%west/discharge_edge(i)%west + F(i)%south/discharge_edge(i)%south)/F(i)%nfluxes
@@ -162,20 +165,22 @@ module sed_hillslopeRouting
 
             implicit none
 
-            real :: B, acc
+            real :: B, acc, term1, term2, term3, term4
 
             !B = DELT/(DELX*DELY)
 
             do i = 1, NA
                 B = DELT/(grs(i)%DELX*grs(i)%DELY)
                 acc = 0.
+                term1 = -B*(theta*(F(i)%south-F(i)%north) + (1-theta)*(FB(i)%south - FB(i)%north))
+                term2 = -B*(theta*(F(i)%east-F(i)%west) + (1-theta)*(FB(i)%east-FB(i)%west))
+                term4 = (1-sca(i)%porosity)
                 do j = 1, nsedpar
     !                csa(i)%pot_Dz =( -B*(theta*(F(i)%south-F(i)%north) + (1-theta)*(FB(i)%south - FB(i)%north)) - &
     !                            B*(theta*(F(i)%east-F(i)%west) + (1-theta)*(FB(i)%east-FB(i)%west)) - &
     !                            (ofh(i)%depth*1.e-3*csa(i)%C(j)- ofhB(i)%depth*1.e-3*csaB(i)%C(j)) )/(1-sca(i)%porosity)
-                    acc = acc + ( -B*(theta*(F(i)%south-F(i)%north) + (1-theta)*(FB(i)%south - FB(i)%north)) - &
-                                B*(theta*(F(i)%east-F(i)%west) + (1-theta)*(FB(i)%east-FB(i)%west)) - &
-                                (ofh(i)%depth*1.e-3*csa(i)%C(j)- ofhB(i)%depth*1.e-3*csaB(i)%C(j)) )/(1-sca(i)%porosity)
+                    term3 = -(ofh(i)%depth*1.e-3*csa(i)%C(j)- ofhB(i)%depth*1.e-3*csaB(i)%C(j))
+                    acc = acc + (term1 + term2 + term3)/term4
                 end do
                 csa(i)%pot_Dz = acc
             end do
@@ -198,7 +203,7 @@ module sed_hillslopeRouting
 
             implicit none
 
-            real :: B, nume, deno
+            real :: B, numeTerm1, numeTerm2, numeTerm3, deno
 
             !B = DELT/(DELX*DELY)
 
@@ -213,19 +218,20 @@ module sed_hillslopeRouting
                 else
                     csa(i)%Dz = csa(i)%ava_Dz
 
-                    do j = 1, nsedpar
-                        nume = ( (ofhB(i)%depth*1.e-3*csaB(i)%C(j)-csa(i)%Dz*(1-sca(i)%porosity)) &
-                                - B*(theta*(F(i)%s_south*F(i)%south-F(i)%s_north*F(i)%north)  &
-                                +   (1-theta)*(FB(i)%s_south*FB(i)%south-FB(i)%s_north*FB(i)%north)) &
-                                - B*(theta*(F(i)%s_east*F(i)%east-F(i)%s_west*F(i)%west)  &
-                                +   (1-theta)*(FB(i)%s_east*FB(i)%east-FB(i)%s_west*FB(i)%west)) )
+                    deno = ofh(i)%depth*1.e-3 + theta*B*((1-F(i)%s_south)*discharge_edge(i)%south -&
+                                      (1-F(i)%s_north)*discharge_edge(i)%north +&
+                                      (1-F(i)%s_east)*discharge_edge(i)%east   -&
+                                      (1-F(i)%s_west)*discharge_edge(i)%west)
 
-                        deno = ofh(i)%depth*1.e-3 + theta*B*((1-F(i)%s_south)*discharge_edge(i)%south -&
-                                                              (1-F(i)%s_north)*discharge_edge(i)%north +&
-                                                              (1-F(i)%s_east)*discharge_edge(i)%east   -&
-                                                              (1-F(i)%s_west)*discharge_edge(i)%west)
+                    numeTerm2 = - B*(theta*(F(i)%s_south*F(i)%south-F(i)%s_north*F(i)%north)  &
+                                +   (1-theta)*(FB(i)%s_south*FB(i)%south-FB(i)%s_north*FB(i)%north))
+                    numeTerm3 = - B*(theta*(F(i)%s_east*F(i)%east-F(i)%s_west*F(i)%west)  &
+                                +   (1-theta)*(FB(i)%s_east*FB(i)%east-FB(i)%s_west*FB(i)%west))
+                    do j = 1, nsedpar
+                        numeTerm1 = (ofhB(i)%depth*1.e-3*csaB(i)%C(j)-csa(i)%Dz*(1-sca(i)%porosity))
+
                         if (deno /= 0.) then
-                            csa(i)%C(j) = sca(i)%frac(j)*nume/deno
+                            csa(i)%C(j) = sca(i)%frac(j)*( numeTerm1 + numeTerm2 + numeTerm3 )/deno
                         else
                             csa(i)%C(j) = 0.
                         end if
@@ -234,13 +240,11 @@ module sed_hillslopeRouting
                             csa(i)%C(j) = 0.
                         end if
                     end do
-
-                    G_out(i)%east  = sum(csa(i)%C) * discharge_edge(i)%east
-                    G_out(i)%north = sum(csa(i)%C) * discharge_edge(i)%north
-                    G_out(i)%west  = sum(csa(i)%C) * discharge_edge(i)%west
-                    G_out(i)%south = sum(csa(i)%C) * discharge_edge(i)%south
-
                 end if
+                G_out(i)%east  = sum(csa(i)%C) * discharge_edge(i)%east
+                G_out(i)%north = sum(csa(i)%C) * discharge_edge(i)%north
+                G_out(i)%west  = sum(csa(i)%C) * discharge_edge(i)%west
+                G_out(i)%south = sum(csa(i)%C) * discharge_edge(i)%south
 
                 !end do
 

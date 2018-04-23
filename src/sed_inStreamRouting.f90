@@ -44,6 +44,7 @@ module sed_inStreamRouting
 
             tau_c = critShearStress(rho, gravi, h, S, D, v, rhos)
 
+
             criBedShearVelocity = (tau_c/rho)**0.5
 
         end function criBedShearVelocity
@@ -72,7 +73,8 @@ module sed_inStreamRouting
 
                 Vcb = criBedShearVelocity(rho, gravi, h, S, D, v, rhos)
                 Vb = bedShearVelocity(gravi, h, S)
-                if (Vb == 0.) then
+
+                if (Vb == 0. .or. (Vcb/Vb > 1)) then
                     longSedVelocity = 0.
                 else
                     longSedVelocity = 8.5*Vb*sqrt(1-Vcb/Vb)
@@ -82,7 +84,6 @@ module sed_inStreamRouting
             else
                 longSedVelocity = Vel
             end if
-
         end function longSedVelocity
 
         subroutine longSedVelocity_grid()
@@ -98,7 +99,6 @@ module sed_inStreamRouting
                     !end if
                 end do
             end do
-
         end subroutine longSedVelocity_grid
 
 
@@ -137,7 +137,8 @@ module sed_inStreamRouting
                     gsOut = gsOut_of + gsOut_bf
 
                     isrn(i)%gs(k) = gsIn + gsOut
-                    !print*, gs
+                    !print *, isrn(i)%gs(k)
+                    !if (isnan(isrn(i)%gs(k))) stop '"x" is a NaN'
 
                 end do
 

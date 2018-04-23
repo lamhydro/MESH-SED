@@ -61,6 +61,7 @@ module sed_rainDropDetachment
             ! Leaf drip fall velocity (v) (m/s)
             v = leafDripFallVel(rho,d,X,gravi,pi)
 
+
             leafDripVol = pi*((d*1e-3)**3)/6
             sqrMomLeafDrip = (drip*draina*(rho*v*leafDripVol)**2)/leafDripVol
 
@@ -182,10 +183,18 @@ module sed_rainDropDetachment
 
 
             M_R = sqrMomRain(I)
-            M_D = sqrMomLeafDrip(d, drip, draina, rho, pi, X, gravi)
-            Fw = waterDepthCorrFact(I, h, d)
 
+            if (d == 0.) then
+                M_D = 0.
+            else
+                M_D = sqrMomLeafDrip(d, drip, draina, rho, pi, X, gravi)
+            end if
+            !if (isnan(M_D)) stop '"M_D" is a NaN'
+
+            Fw = waterDepthCorrFact(I, h, d)
+            !if (isnan(Fw)) stop '"Fw" is a NaN'
             rainDropDetach = K_R*Fw*(1 - C_G)*( (1 - C_C)*M_R + M_D )
+
 
         end function rainDropDetach
 
@@ -223,8 +232,10 @@ module sed_rainDropDetachment
                         ! cellSoilChar(i)%soilDetach, cellGroundCov(i), &
                         ! cellCanopyCov(i))
 
+
+                        ! NOTE: evapotran converted from mm/h to m/s
                         D_R(i) = rainDropDetach(mv(i)%precip, vca(i)%dropDiam, &
-                         vca(i)%percDrip, mv(i)%evapotran, rhow, pi, &
+                         vca(i)%percDrip, mv(i)%evapotran/(1000*3600), rhow, pi, &
                          vca(i)%fallHeight, gravi, ofh(i)%depth, &
                          sca(i)%soilDetach, gca(i)%cellGroundCov, &
                          gca(i)%cellCanopyCov)

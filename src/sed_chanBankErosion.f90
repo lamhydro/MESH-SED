@@ -8,7 +8,7 @@ module sed_chanBankErosion
         ! - B: Effective channel width (m)
         ! - H: Flow depth (m)
         ! Output:
-        ! - K: Proportionatily contant for rectangular channels.
+        ! - K: Proportionatily constant for rectangular channels.
             implicit none
 
             real, intent(in) :: B, H
@@ -92,7 +92,7 @@ module sed_chanBankErosion
                                     vis, bsca(i)%density, rh(i)%width)
                 Eb = Eb * rh(i)%depth/bsca(i)%density    ! from kg m-2 s-1 to m3 m-1 s-1
                 do j = 1, nsedpar
-                    isrr(i)%bke(j) = Eb * bsca(i)%frac(j)
+                    isrr(i)%bke(j) =  bsca(i)%frac(j) * Eb
                 end do
             end do
 

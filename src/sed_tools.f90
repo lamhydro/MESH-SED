@@ -53,7 +53,11 @@ module sed_tools
                   if (x(i) <= xi .and. x(i+1) >= xi)  then
                    dx = x(i+1)-x(i)
                    dy = y(i+1)-y(i)
-                   linearInterpo = y(i) + dy*(xi - x(i))/dx
+                   if (dx == 0) then
+                    linearInterpo = y(i)
+                   else
+                    linearInterpo = y(i) + dy*(xi - x(i))/dx
+                   end if
                    exit
                   end if
                 end do

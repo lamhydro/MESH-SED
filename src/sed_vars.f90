@@ -54,7 +54,10 @@ module sed_vars
                                     filenameEV = "EVAP_H.r2c", &
                                     filenameRBM = "rbm_input.r2c", &
                                     filenameWR = "WR_RUNOVF_H.r2c"
-    character(len=80) :: casename, casedir, OUTFIELDfolder, dateTime,  filename, dateIn
+    character(len=80) :: casename, casedir, OUTFIELDfolder, dateTime,  filename, &
+                        dateIn, date1PR, date1EV, date1WR,  date2PR, date2EV, date2WR, &
+                        date1RBM1, date2RBM1, date1RBM2, date2RBM2, date1RBM3, date2RBM3, &
+                        date1RBM4, date2RBM4, date1RBM5, date2RBM5, date1RBM6, date2RBM6
     character(len=150) :: MESHdir, filepath, filepathOUTFIELD, filepathRBM
     integer :: DELTac
     type GridParams
@@ -133,7 +136,11 @@ module sed_vars
     real, dimension(:), allocatable:: imperCellAre
     integer, dimension(:), allocatable :: ipos, jpos
     integer, dimension(:,:), allocatable :: rank, next
-    real, dimension(:,:), allocatable  :: dummy, variMat
+    real, dimension(:,:), allocatable  :: dummy, variMat, mat1PR, mat1EV, mat1WR, &
+                                        mat2PR, mat2EV, mat2WR, mat1RBM1, mat2RBM1, &
+                                        mat1RBM2, mat2RBM2, mat1RBM3, mat2RBM3, &
+                                        mat1RBM4, mat2RBM4, mat1RBM5, mat2RBM5, &
+                                        mat1RBM6, mat2RBM6
     integer, dimension(:,:), allocatable  :: dummyI
     character(len=8), dimension(:,:), allocatable  :: dummyC
 
@@ -175,6 +182,7 @@ module sed_vars
 
     ! Dummy variables
     integer :: i, j, k, ios
+    integer :: iosPR = 0, iosEV = 0, iosWR = 0, iosRBM
 
     ! Input file units
     !integer, parameter :: unitpar = 1
@@ -182,6 +190,10 @@ module sed_vars
     integer, parameter :: unitSoVeCha = 20
     integer, parameter :: unitGrid = 30
     integer, parameter :: unitDrainDB = 40
+    integer, parameter :: unitPR = 60
+    integer, parameter :: unitEV = 80
+    integer, parameter :: unitWR = 100
+    integer, parameter :: unitRBM = 120
     !integer, parameter :: unitOUTFIELDprecip = 50
     !integer, parameter :: unitOUTFIELDevap = 60
     !integer, parameter :: unit_rbm_input = 70

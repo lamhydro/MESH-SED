@@ -108,6 +108,7 @@ module sed_overlandFlowTransCapa
 
             ! Specific gravity
             sg = rhos/rho
+            !print *, rhos, ' ', rho, ' ',  sg
 
             overlandFlowTransCapa_engHan = (0.05 * W * (V**2) * (h**1.5) * (S**1.5))/( ((sg-1)**2)*D*sqrt(gravi) )
 

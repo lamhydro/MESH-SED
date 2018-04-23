@@ -16,15 +16,19 @@ module sed_config
 
             !allocate(cba%iniThickBed(NA), cba%soilTypeBed(NA), cba%soilTypeBank(NA))
 
-            allocate(imperCellAre(NA), ipos(NA), jpos(NA), dummy(yCount, xCount), &
-                    variMat(yCount, xCount), dummyC(yCount,xCount), dummyI(yCount,xCount), grs(NA), &
-                    DISC(yCount,xCount), INFL(yCount,xCount), QDIF(yCount,xCount), &
-                    DEPT(yCount,xCount), WIDT(yCount,xCount), VELO(yCount,xCount))
+            allocate(imperCellAre(NA), ipos(NA), jpos(NA), dummy(yCount, xCount), mat1PR(yCount, xCount), &
+                    mat2PR(yCount, xCount), mat1EV(yCount, xCount), mat2EV(yCount, xCount), &
+                    mat1WR(yCount, xCount), mat2WR(yCount, xCount), variMat(yCount, xCount), &
+                    dummyC(yCount,xCount), dummyI(yCount,xCount), grs(NA), DISC(yCount,xCount), INFL(yCount,xCount), &
+                    QDIF(yCount,xCount), DEPT(yCount,xCount), WIDT(yCount,xCount), VELO(yCount,xCount))
 
+            allocate(mat1RBM1(yCount, xCount),mat2RBM1(yCount, xCount), mat1RBM2(yCount, xCount), &
+                     mat2RBM2(yCount, xCount), mat1RBM3(yCount, xCount), mat2RBM3(yCount, xCount), &
+                     mat1RBM4(yCount, xCount), mat2RBM4(yCount, xCount), mat1RBM5(yCount, xCount), &
+                     mat2RBM5(yCount, xCount), mat1RBM6(yCount, xCount), mat2RBM6(yCount, xCount) )
 
 
             allocate(mv(NA), ofh(NA), ofhB(NA), rh(NA))
-
 
             allocate(gca(NA), cba(NA))
 
@@ -81,6 +85,7 @@ module sed_config
                         sca(i)%diameter = fracDiame(sca(i)%frac, sp%meanD, 0.50) !sum(sca(i)%frac*sp%meanD)
                         !print*, 'herere', sca(i)%diameter
                         sca(i)%density  = sa(gca(i)%soilType)%density
+                        !print *, 'den ', i, gca(i)%soilType, sca(i)%density
                         sca(i)%porosity = sa(gca(i)%soilType)%porosity
                         sca(i)%soilDetach       = sa(gca(i)%soilType)%soilDetach
                         !sca(i)%overlandDetach   = sa(gca(i)%soilType)%overlandDetach
@@ -124,7 +129,6 @@ module sed_config
                 !end do
             !end do
             end do
-
         end subroutine setSoilAndVegeParamInCell
 
 

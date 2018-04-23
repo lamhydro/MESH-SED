@@ -256,6 +256,8 @@ module sed_inStreamTransCapa
                 Ggrm = 0.
             end if
 
+            !print *,'--', Q, Ggrm, Dm, Vel, Vs, n, h
+
             ! Volumetric sediment transport rate G (m^3 /s )
             inStreamTransCapa_Day_1 = Q*Ggrm*Dm*((Vel/Vs)**n)/h
 

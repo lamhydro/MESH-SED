@@ -82,7 +82,7 @@ module sed_overlandFlowDetachment
             else
                 a = 0.10; b = -0.30
             end if
-            critDimenShearStress = a*Rey**b
+            critDimenShearStress = a*(Rey**b)
 
         end function critDimenShearStress
 
