@@ -54,10 +54,18 @@ module sed_vars
                                     filenameEV = "EVAP_H.r2c", &
                                     filenameRBM = "rbm_input.r2c", &
                                     filenameWR = "WR_RUNOVF_H.r2c"
+
     character(len=80) :: casename, casedir, OUTFIELDfolder, dateTime,  filename, &
                         dateIn, date1PR, date1EV, date1WR,  date2PR, date2EV, date2WR, &
                         date1RBM1, date2RBM1, date1RBM2, date2RBM2, date1RBM3, date2RBM3, &
-                        date1RBM4, date2RBM4, date1RBM5, date2RBM5, date1RBM6, date2RBM6
+                        date1RBM4, date2RBM4, date1RBM5, date2RBM5, date1RBM6, date2RBM6, &
+                        date1SED1, date1SED2, date1SED3, date1SED4, date1SED5, date1SED6, &
+                        date1SED7, date1SED8, date1SED9, date1SED10, date1SED11, date2SED1, &
+                        date2SED2, date2SED3, date2SED4, date2SED5, date2SED6, date2SED7, &
+                        date2SED8, date2SED9, date2SED10, date2SED11
+
+
+
     character(len=150) :: MESHdir, filepath, filepathOUTFIELD, filepathRBM
     integer :: DELTac
     type GridParams
@@ -100,6 +108,26 @@ module sed_vars
         real, dimension(:,:), allocatable :: CHNL_LEN
     end type GridParams
 
+    type sed_input_r2c
+        character(len=150) :: filepathSED
+        character(len=80) :: filenameSED = "sed_input.r2c"
+        integer :: unitSED = 140
+        integer :: iosSED
+
+        real, dimension(:,:), allocatable :: DISC  !*  1.  Average flow (discharge) (m3 s-1). Note: Averaged over the time-step.
+        real, dimension(:,:), allocatable :: DEPT  !*  2.  Channel depth (m).
+        real, dimension(:,:), allocatable :: WIDT  !*  3.  Channel width (m).
+        real, dimension(:,:), allocatable :: CHLE  !*  4.  Channel length (m).
+        real, dimension(:,:), allocatable :: CHSL  !*  5.  Channel slope (m m-1). slope = sqrt(SLOPE_CHNL)
+        real, dimension(:,:), allocatable :: VELO  !*  6.  Stream velocity (m s-1). Take stream speed to be average flow (m3 s-1) divided by channel x-sec area (m2) (from rte_sub.f).
+        real, dimension(:,:), allocatable :: PREP  !*  7.  Precipitation (mm h-1). Note: Accumulated over the time-step.
+        real, dimension(:,:), allocatable :: EVAP  !*  8.  Evapotranspiration (m s-1). Note: Of evapotranspiration accumulated over the time-step.
+        real, dimension(:,:), allocatable :: OFDE  !*  9.  Overland water depth (mm). Note: Accumulated over the time-step.
+        real, dimension(:,:), allocatable :: LASL  !*  10. Surface slope (m m-1). SLOPE_INT isn't used in CLASS, so average slope from tiles in cell?
+        real, dimension(:,:), allocatable :: CEWI  !*  11. Cell width (m).
+    end type sed_input_r2c
+    type(sed_input_r2c) :: sedi
+
     type outputPointInfo
         character(len=150) :: outputDir
         integer :: nGrPoint
@@ -140,7 +168,12 @@ module sed_vars
                                         mat2PR, mat2EV, mat2WR, mat1RBM1, mat2RBM1, &
                                         mat1RBM2, mat2RBM2, mat1RBM3, mat2RBM3, &
                                         mat1RBM4, mat2RBM4, mat1RBM5, mat2RBM5, &
-                                        mat1RBM6, mat2RBM6
+                                        mat1RBM6, mat2RBM6, &
+                                        mat1SED1, mat1SED2, mat1SED3, mat1SED4, mat1SED5, mat1SED6, &
+                                        mat1SED7, mat1SED8, mat1SED9, mat1SED10,  mat1SED11, mat2SED1, &
+                                        mat2SED2, mat2SED3, mat2SED4, mat2SED5, mat2SED6, mat2SED7, mat2SED8, &
+                                        mat2SED9, mat2SED10, mat2SED11
+
     integer, dimension(:,:), allocatable  :: dummyI
     character(len=8), dimension(:,:), allocatable  :: dummyC
 
@@ -194,6 +227,7 @@ module sed_vars
     integer, parameter :: unitEV = 80
     integer, parameter :: unitWR = 100
     integer, parameter :: unitRBM = 120
+
     !integer, parameter :: unitOUTFIELDprecip = 50
     !integer, parameter :: unitOUTFIELDevap = 60
     !integer, parameter :: unit_rbm_input = 70

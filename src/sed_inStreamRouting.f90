@@ -219,14 +219,32 @@ module sed_inStreamRouting
                         rIn = ion(i)%reachIn(j)
                         isrr(i)%Vs_up = isrr(i)%Vs_up + isrr(rIn)%Vs
                         isrr(i)%G_up = isrr(i)%G_up + isrr(rIn)%G
+!                        if (isnan(sum(isrr(rIn)%G))) then
+!
+!                            print *, i, rIn, ion(rIn)%NreachIn
+!                            stop 'isrr(rIn)%G is a NaN'
+!                        end if
                         length_up = length_up + rh(rIn)%length
                     end do
                     isrr(i)%Vs_up = isrr(i)%Vs_up/ion(i)%NreachIn
                     length_up = length_up/ion(i)%NreachIn
                 end if
 
+
+
                 ideltal = 1/(0.5*(length_up+rh(i)%length))
                 do k = 1, nsedpar
+
+                    !print *, i, k, isrn(i)%Dz(k)
+                    !if (isnan(isrn(i)%Dz(k))) stop 'isrn(i)%Dz(k) is a NaN'
+                    !if (i==1055) then
+                    !    print *, i, k, cbsca(i)%ly(1)%thick, cbsca(i)%ly(1)%frac(k), isrn(i)%Dz(k)
+                    !    if (isnan(cbsca(i)%ly(1)%thick)) stop 'cbsca(i)%ly(1)%thick is a NaN'
+                    !    if (isnan(cbsca(i)%ly(1)%frac(k))) stop 'cbsca(i)%ly(1)%frac(k) is a NaN'
+                    !end if
+
+
+
                     !if  (cbsca(i)%ly(1)%frac(k) > 0) then
 
                     if (isrrB(i)%Vs(k) ==0.) then
@@ -293,6 +311,8 @@ module sed_inStreamRouting
                                 isrr(i)%G(k) = (nume1 + nume2)/deno
                             end if
                         end if
+
+
                         isrr(i)%C(k) = sedCon(isrr(i)%G(k), isrr(i)%Vs(k), rh(i)%width*rh(i)%depth)
                         ! Induce deposition of hightly concetrate flow
                         if ( isrr(i)%C(k) > FPCRIT) then
@@ -302,11 +322,15 @@ module sed_inStreamRouting
                             isrn(i)%Dz(k) = isrn(i)%Dz(k) + (G_old - isrr(i)%G(k))*DELT/(rh(i)%width*rh(i)%length)
                         end if
 
+                        !print*, i, k, isrr(i)%G(k), isrr(i)%C(k), dateIn
+                        !if (isnan(isrr(i)%G(k))) stop 'COARSE isrr(i)%G(j) is a NaN'
+
                     else                            ! For fine sediment (silt and clay)
 
                         if (rh(i)%discharge == 0.) then
                             isrr(i)%G(k) = 0.
                             isrr(i)%C(k) = sedCon(isrr(i)%G(k), isrr(i)%Vs(k), rh(i)%width*rh(i)%depth)
+
 
                             if (isrr(i)%Vs(k) == 0.) then
                                 frac4 = 0
@@ -338,7 +362,6 @@ module sed_inStreamRouting
                             isrr(i)%C(k) = sedCon(isrr(i)%G(k), isrr(i)%Vs(k), rh(i)%width*rh(i)%depth)
 
 
-
                             ! Induce deposition of hightly concetrate flow
                             if ( isrr(i)%C(k) > FPCRIT) then
                                 isrr(i)%C(k) = FPCRIT
@@ -346,6 +369,12 @@ module sed_inStreamRouting
                                 isrr(i)%G(k) = isrr(i)%C(k) * rh(i)%discharge
                                 isrn(i)%Dz(k) = isrn(i)%Dz(k) + (G_old - isrr(i)%G(k))*DELT/(rh(i)%width*rh(i)%length)
                             end if
+
+                            !print*, i, k, isrr(i)%G(k), isrr(i)%C(k), dateIn
+                            !if (isnan(isrr(i)%G(k))) then
+                            !    print *, nume1, nume2, deno, factor, isrn(i)%Dz(k),cbsca(i)%ly(1)%thick, cbsca(i)%ly(1)%frac(k)
+                            !    stop 'FINE isrr(i)%G(j) is a NaN'
+                            !end if
 
                         end if
 
@@ -377,21 +406,45 @@ module sed_inStreamRouting
                     if (sum(isrn(i)%Dz) >= 0) then ! Net deposition
                         deno = cbscaB(i)%ly(1)%thick + sum(isrn(i)%Dz)
                         do k = 1, nsedpar
-                            cbsca(i)%ly(1)%frac(k) = (cbscaB(i)%ly(1)%frac(k)*cbscaB(i)%ly(1)%thick + &
+                            !> Conditional to check the denominator
+                            if (deno == 0.) then
+                                cbsca(i)%ly(1)%frac(k) = 0.
+                            else
+                                cbsca(i)%ly(1)%frac(k) = (cbscaB(i)%ly(1)%frac(k)*cbscaB(i)%ly(1)%thick + &
                                                     isrn(i)%Dz(k))/deno
-                            cbsca(i)%ly(2)%frac(k) = (cbscaB(i)%ly(2)%frac(k)*cbscaB(i)%ly(2)%thick + &
+                            end if
+
+                            !> Conditional to check the denominator
+                            if (cbsca(i)%ly(2)%thick == 0.) then
+                                cbsca(i)%ly(2)%frac(k) = 0.
+                            else
+                                cbsca(i)%ly(2)%frac(k) = (cbscaB(i)%ly(2)%frac(k)*cbscaB(i)%ly(2)%thick + &
                                                    cbsca(i)%ly(1)%frac(k)*(cbsca(i)%ly(2)%thick - cbscaB(i)%ly(2)%thick))/&
                                                    cbsca(i)%ly(2)%thick
+                            end if
                         end do
 
                     else                            ! Net erosion
+
                         do k = 1, nsedpar
-                            cbsca(i)%ly(1)%frac(k) = (cbscaB(i)%ly(1)%frac(k)*cbscaB(i)%ly(1)%thick + &
+                            !> Conditional to check the denominator
+                            if (cbsca(i)%ly(1)%thick == 0.) then
+                                cbsca(i)%ly(1)%frac(k) = 0
+                            else
+                                cbsca(i)%ly(1)%frac(k) = (cbscaB(i)%ly(1)%frac(k)*cbscaB(i)%ly(1)%thick + &
                                                     isrn(i)%Dz(k) + cbscaB(i)%ly(2)%frac(k)*(cbsca(i)%ly(1)%thick - &
                                                     cbscaB(i)%ly(1)%thick - sum(isrn(i)%Dz)))/cbsca(i)%ly(1)%thick
-                            cbsca(i)%ly(2)%frac(k) = (cbscaB(i)%ly(2)%frac(k)*cbscaB(i)%ly(2)%thick + &
+                            end if
+
+                            !> Conditional to check the denominator
+                            if (cbsca(i)%ly(2)%thick == 0.) then
+                                cbsca(i)%ly(2)%frac(k) = 0.
+
+                            else
+                                cbsca(i)%ly(2)%frac(k) = (cbscaB(i)%ly(2)%frac(k)*cbscaB(i)%ly(2)%thick + &
                                                    cbscaB(i)%ly(2)%frac(k)*(cbsca(i)%ly(2)%thick - cbscaB(i)%ly(2)%thick))/&
                                                    cbsca(i)%ly(2)%thick
+                            end if
                         end do
 
                     end if

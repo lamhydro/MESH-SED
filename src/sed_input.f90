@@ -96,8 +96,8 @@ module sed_input
 !            end do
             read(unit = unitParam,fmt = *)
             read(unit = unitParam,fmt = *) MESHdir
-            read(unit = unitParam,fmt = *)
-            read(unit = unitParam,fmt = *) OUTFIELDfolder
+!            read(unit = unitParam,fmt = *)
+!            read(unit = unitParam,fmt = *) OUTFIELDfolder
             read(unit = unitParam,fmt = *)
             read(unit = unitParam,fmt = *) theta, theta_r, phi
             read(unit = unitParam,fmt = *)
@@ -672,6 +672,66 @@ module sed_input
 
         end subroutine readInStreamFlowData
 
+
+        subroutine readMESHoutputData
+            implicit none
+
+            real :: mannDisc, mannVel
+
+            call interp2_sed_input(mat1SED1, date1SED1, mat1SED2, date1SED2, &
+                                     mat1SED3, date1SED3, mat1SED4, date1SED4, mat1SED5, date1SED5, mat1SED6, date1SED6, &
+                                     mat1SED7, date1SED7, mat1SED8, date1SED8, mat1SED9, date1SED9, mat1SED10, date1SED10, &
+                                     mat1SED11, date1SED11, &
+                                     mat2SED1, date2SED1, mat2SED2, date2SED2, mat2SED3, date2SED3, mat2SED4, date2SED4, &
+                                     mat2SED5, date2SED5, mat2SED6, date2SED6, mat2SED7, date2SED7, mat2SED8, date2SED8, &
+                                     mat2SED9, date2SED9, &
+                                     mat2SED10, date2SED10, mat2SED11, date2SED11, dateIn)
+
+
+            do i = 1, NA
+                !> Met variables
+                mv(i)%precip = sedi%PREP(ipos(i),jpos(i)) !*  7.  Precipitation (mm h-1). Note: Accumulated over the time-step.
+                mv(i)%evapotran = sedi%EVAP(ipos(i),jpos(i))!*  8.  Evapotranspiration (mm h-1). Note: Of evapotranspiration accumulated over the time-step. UNITS????????????????
+
+
+                !> Overland flow hydraulic variables
+                ofh(i)%depth = sedi%OFDE(ipos(i),jpos(i)) !*  9.  Overland water depth (mm). Note: Accumulated over the time-step.
+                ofh(i)%slope = sedi%LASL(ipos(i),jpos(i)) !*  10. Surface slope (m m-1). SLOPE_INT isn't used in CLASS, so average slope from tiles in cell?
+                ofh(i)%width = sedi%CEWI(ipos(i),jpos(i)) !*  11. Cell width (m).
+                ofh(i)%discharge = (ofh(i)%depth*0.001/0.34)**(1/0.341) ! Overland flow discharge in m3/s. Eq. According to Allen et al, 1994
+                mannDisc = (1/0.060)*(ofh(i)%depth*0.001*ofh(i)%width)*(ofh(i)%slope**0.5)* &
+                            (ofh(i)%depth*0.001*ofh(i)%width/(2*ofh(i)%depth*0.001 + ofh(i)%width))**(2/3)
+                if (ofh(i)%depth /= 0.) then
+                    ofh(i)%velocity = ofh(i)%discharge/((ofh(i)%depth/1000.)*ofh(i)%width)               ! Water flow velocity (m/s).
+                    mannVel = mannDisc/((ofh(i)%depth/1000.)*ofh(i)%width)
+                else
+                    ofh(i)%velocity = 0.
+                    mannVel  = 0.
+                end if
+                !if (i == 1325 ) then
+                    !print *, '-->', i, ofh(i)%depth, ofh(i)%discharge, mannDisc, ofh(i)%velocity, mannVel
+                    !print *, i, mv(i)%precip, mv(i)%evapotran
+                !end if
+
+
+                !> In-stream variables
+                rh(i)%slope = sedi%CHSL(ipos(i),jpos(i)) !*  5.  Channel slope (m m-1). slope = sqrt(SLOPE_CHNL)
+                rh(i)%velocity = sedi%VELO(ipos(i),jpos(i)) !*  6.  Stream velocity (m s-1). Take stream speed to be average flow (m3 s-1) divided by channel x-sec area (m2) (from rte_sub.f).
+                rh(i)%width = sedi%WIDT(ipos(i),jpos(i)) !*  3.  Channel width (m).
+                rh(i)%discharge = sedi%DISC(ipos(i),jpos(i)) !*  1.  Average flow (discharge) (m3 s-1). Note: Averaged over the time-step.
+                rh(i)%length = sedi%CHLE(ipos(i),jpos(i)) !*  4.  Channel length (m).
+                rh(i)%depth = sedi%DEPT(ipos(i),jpos(i)) !*  2.  Channel depth (m).
+                !rh(i)%depth = 0.34*rh(i)%discharge**0.341 !*  Channel depth (m). Estimated based on Allen et al, 1994 as MESH water depth is cte
+
+                !if (i == 1325 ) then
+                    !print *, '-->', i, rh(i)%velocity, rh(i)%depth, 0.34*rh(i)%discharge**0.341, rh(i)%width, rh(i)%discharge
+                !end if
+
+            end do
+
+
+        end subroutine readMESHoutputData
+
         subroutine readHeader_MESH_OUTPUTFILES(filepath, filename, fileunit, ios)
             implicit none
             character(len=80), intent(in) :: filename
@@ -974,6 +1034,143 @@ module sed_input
         end subroutine getMat1_rbm_input
 
 
+        subroutine getMat1_sed_input(filepath, filename, fileunit, mat11, date11, mat12, date12, &
+                                     mat13, date13, mat14, date14, mat15, date15, mat16, date16, &
+                                     mat17, date17, mat18, date18, mat19, date19, mat110, date110, &
+                                     mat111, date111, &
+                                     mat21, date21, mat22, date22, mat23, date23, mat24, date24, &
+                                     mat25, date25, mat26, date26, mat27, date27, mat28, date28, &
+                                     mat29, date29, mat210, date210, mat211, date211, &
+                                     inDate, ios)
+            implicit none
+
+            character(len=80), intent(in) :: filename
+            character(len=150), intent(in) :: filepath
+            integer, intent(in) :: fileunit
+            character(len=80), intent(in) :: inDate
+            character(len=80), intent(out) :: date11, date12, date13, date14, date15, date16, &
+                                              date17, date18, date19, date110, date111, &
+                                              date21, date22, date23, date24, date25, date26, &
+                                              date27, date28, date29, date210, date211
+            integer, intent(inout) :: ios
+            real, dimension(:,:), intent(out) :: mat11, mat12, mat13, mat14, mat15, mat16, &
+                                                 mat17, mat18, mat19, mat110, mat111, &
+                                                 mat21, mat22, mat23, mat24, mat25, mat26, &
+                                                 mat27, mat28, mat29, mat210, mat211
+
+            type(IterDate) :: dateC, date1111
+            character(len=80) :: line
+            integer :: i
+
+            call readHeader_MESH_OUTPUTFILES(filepath, filename, fileunit, ios)
+
+            call parseDateTime(inDate, dateC)
+            ! NOTE: MESH gridded output files go from 1H to 24H. Our program begin 0H and end at 23H.
+            ! 1 is added below to adjust our hour accoridingly.
+            dateC%hour = dateC%hour + 1
+            !secsC = dateC%hour*3600 + dateC%mins*60 + dateC%secs
+
+            do while(ios.eq.0)
+
+                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                date11 = trim(line(index(line, '"'):len_trim(line)))
+                call parseDateTime(date11, date1111)
+                do i = 1, yCount
+                    read(unit = fileunit, fmt = *, iostat=ios) mat11(i,:)
+                end do
+                read(unit = fileunit, fmt = *, iostat=ios)
+
+
+                if (date1111%year == dateC%year) then
+                    if (date1111%month == dateC%month) then
+                        if (date1111%day == dateC%day) then
+                            if (date1111%hour == dateC%hour) then
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date12 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat12(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date13 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat13(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date14 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat14(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date15 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat15(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date16 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat16(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date17 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat17(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date18 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat18(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date19 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat19(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date110 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat110(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                read(unit=fileunit, FMT='((A))', iostat=ios) line
+                                date111 = trim(line(index(line, '"'):len_trim(line)))
+                                do i = 1, yCount
+                                    read(unit = fileunit, fmt = *, iostat=ios) mat111(i,:)
+                                end do
+                                read(unit = fileunit, fmt = *, iostat=ios)
+
+                                exit
+                            end if
+                        end if
+                    end if
+                end if
+            end do
+
+            call getMat2_sed_input(fileunit, mat21, date21, mat22, date22, mat23, date23, &
+                                     mat24, date24, mat25, date25, mat26, date26, &
+                                     mat27, date27, mat28, date28, mat29, date29, mat210, date210, &
+                                     mat211, date211, ios)
+
+        end subroutine getMat1_sed_input
+
+
         subroutine getMat2_rbm_input(fileunit, mat21, date21, mat22, date22, mat23, date23, &
                                      mat24, date24, mat25, date25, mat26, date26, ios)
             implicit none
@@ -1027,6 +1224,100 @@ module sed_input
             read(unit = fileunit, fmt = *, iostat=ios)
 
         end subroutine getMat2_rbm_input
+
+        subroutine getMat2_sed_input(fileunit, mat21, date21, mat22, date22, mat23, date23, &
+                                     mat24, date24, mat25, date25, mat26, date26, &
+                                     mat27, date27, mat28, date28, mat29, date29, mat210, date210, &
+                                     mat211, date211, ios)
+            implicit none
+            integer, intent(in) :: fileunit
+            character(len=80), intent(out) :: date21, date22, date23, date24, date25, date26, &
+                                              date27, date28, date29, date210, date211
+            integer, intent(inout) :: ios
+            real, dimension(:,:), intent(out) :: mat21, mat22, mat23, mat24, mat25, mat26, &
+                                                 mat27, mat28, mat29, mat210, mat211
+
+            character(len=80) :: line
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date21 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat21(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date22 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat22(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date23 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat23(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date24 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat24(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date25 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat25(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date26 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat26(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date27 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat27(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date28 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat28(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date29 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat29(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date210 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat210(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+            read(unit=fileunit, FMT='((A))', iostat=ios) line
+            date211 = trim(line(index(line, '"'):len_trim(line)))
+            do i = 1, yCount
+                read(unit = fileunit, fmt = *, iostat=ios) mat211(i,:)
+            end do
+            read(unit = fileunit, fmt = *, iostat=ios)
+
+        end subroutine getMat2_sed_input
+
 
         subroutine interp2_rbm_input(fileunit, mat11, date11, mat12, date12, &
                                      mat13, date13, mat14, date14, mat15, date15, mat16, date16, &
@@ -1096,6 +1387,106 @@ module sed_input
             matF6 = (mat26-mat16)*(secsC/3600) + mat16
 
         end subroutine interp2_rbm_input
+
+
+        subroutine interp2_sed_input(mat11, date11, mat12, date12, &
+                                     mat13, date13, mat14, date14, mat15, date15, mat16, date16, &
+                                     mat17, date17, mat18, date18, mat19, date19, mat110, date110, mat111, date111, &
+                                     mat21, date21, mat22, date22, mat23, date23, mat24, date24, mat25, date25, &
+                                     mat26, date26, mat27, date27, mat28, date28, mat29, date29, mat210, date210, &
+                                     mat211, date211, inDate)
+            implicit none
+
+            !integer, intent(in) :: fileunit
+            character(len=80), intent(inout) :: date11, date12, date13, date14, date15, date16, &
+                                                date17, date18, date19, date110, date111, &
+                                                date21, date22, date23, date24, date25, date26, &
+                                                date27, date28, date29, date210, date211
+
+            real, dimension(:,:), intent(inout) :: mat11, mat12, mat13, mat14, mat15, mat16, &
+                                                   mat17, mat18, mat19, mat110, mat111, &
+                                                   mat21, mat22, mat23, mat24, mat25, mat26, &
+                                                   mat27, mat28, mat29, mat210, mat211
+
+            character(len=80), intent(in) :: inDate
+            !integer, intent(inout) :: ios
+            !real, dimension(:,:), intent(out) :: matF1, matF2, matF3, matF4, matF5, matF6, &
+            !                                     matF7, matF8, matF9, matF10, matF11
+
+
+            !real, dimension(yCount,xCount) :: matF
+            type(IterDate) :: dateC, date2222
+            real :: secsC
+            !real :: dsecs11
+
+            call parseDateTime(inDate, dateC)
+            secsC = dateC%mins*60 + dateC%secs
+
+            call parseDateTime(date21, date2222)
+
+            if (dateC%year == date2222%year) then
+                if (dateC%month == date2222%month) then
+                    if (dateC%day == date2222%day) then
+                        if (dateC%hour+1 == date2222%hour) then
+                            if (secsC >= 0.0) then
+                                date11 = date21
+                                mat11 = mat21
+
+                                date12 = date22
+                                mat12 = mat22
+
+                                date13 = date23
+                                mat13 = mat23
+
+                                date14 = date24
+                                mat14 = mat24
+
+                                date15 = date25
+                                mat15 = mat25
+
+                                date16 = date26
+                                mat16 = mat26
+
+                                date17 = date27
+                                mat17 = mat27
+
+                                date18 = date28
+                                mat18 = mat28
+
+                                date19 = date29
+                                mat19 = mat29
+
+                                date110 = date210
+                                mat110 = mat210
+
+                                date111 = date211
+                                mat111 = mat211
+
+                                call getMat2_sed_input(sedi%unitSED, mat21, date21, mat22, date22, mat23, date23, &
+                                     mat24, date24, mat25, date25, mat26, date26, &
+                                     mat27, date27, mat28, date28, mat29, date29, mat210, date210, &
+                                     mat211, date211, sedi%iosSED)
+                            end if
+                        end if
+                    end if
+                end if
+            end if
+
+            !dsecs11 = secsC - secs11
+            !matF = (mat2-mat1)*(dsecs11/3600) + mat1
+            sedi%DISC = (mat21-mat11)*(secsC/3600) + mat11
+            sedi%DEPT = (mat22-mat12)*(secsC/3600) + mat12
+            sedi%WIDT = (mat23-mat13)*(secsC/3600) + mat13
+            sedi%CHLE = (mat24-mat14)*(secsC/3600) + mat14
+            sedi%CHSL = (mat25-mat15)*(secsC/3600) + mat15
+            sedi%VELO = (mat26-mat16)*(secsC/3600) + mat16
+            sedi%PREP = (mat27-mat17)*(secsC/3600) + mat17
+            sedi%EVAP = (mat28-mat18)*(secsC/3600) + mat18
+            sedi%OFDE = (mat29-mat19)*(secsC/3600) + mat19
+            sedi%LASL = (mat210-mat110)*(secsC/3600) + mat110
+            sedi%CEWI = (mat211-mat111)*(secsC/3600) + mat111
+
+        end subroutine interp2_sed_input
 
 
 

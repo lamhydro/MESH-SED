@@ -20,12 +20,27 @@ module sed_config
                     mat2PR(yCount, xCount), mat1EV(yCount, xCount), mat2EV(yCount, xCount), &
                     mat1WR(yCount, xCount), mat2WR(yCount, xCount), variMat(yCount, xCount), &
                     dummyC(yCount,xCount), dummyI(yCount,xCount), grs(NA), DISC(yCount,xCount), INFL(yCount,xCount), &
-                    QDIF(yCount,xCount), DEPT(yCount,xCount), WIDT(yCount,xCount), VELO(yCount,xCount))
+                    QDIF(yCount,xCount), DEPT(yCount,xCount), WIDT(yCount,xCount), VELO(yCount,xCount) )
 
-            allocate(mat1RBM1(yCount, xCount),mat2RBM1(yCount, xCount), mat1RBM2(yCount, xCount), &
-                     mat2RBM2(yCount, xCount), mat1RBM3(yCount, xCount), mat2RBM3(yCount, xCount), &
-                     mat1RBM4(yCount, xCount), mat2RBM4(yCount, xCount), mat1RBM5(yCount, xCount), &
-                     mat2RBM5(yCount, xCount), mat1RBM6(yCount, xCount), mat2RBM6(yCount, xCount) )
+            allocate(sedi%DISC(yCount,xCount), sedi%DEPT(yCount,xCount), sedi%WIDT(yCount,xCount), &
+                    sedi%CHLE(yCount,xCount),  sedi%CHSL(yCount,xCount), sedi%VELO(yCount,xCount), &
+                    sedi%PREP(yCount,xCount), sedi%EVAP(yCount,xCount), sedi%OFDE(yCount,xCount), &
+                    sedi%LASL(yCount,xCount), sedi%CEWI(yCount,xCount))
+
+
+!            allocate(mat1RBM1(yCount, xCount),mat2RBM1(yCount, xCount), mat1RBM2(yCount, xCount), &
+!                     mat2RBM2(yCount, xCount), mat1RBM3(yCount, xCount), mat2RBM3(yCount, xCount), &
+!                     mat1RBM4(yCount, xCount), mat2RBM4(yCount, xCount), mat1RBM5(yCount, xCount), &
+!                     mat2RBM5(yCount, xCount), mat1RBM6(yCount, xCount), mat2RBM6(yCount, xCount) )
+
+            allocate(mat1SED1(yCount, xCount),mat2SED1(yCount, xCount), mat1SED2(yCount, xCount), &
+                     mat2SED2(yCount, xCount), mat1SED3(yCount, xCount), mat2SED3(yCount, xCount), &
+                     mat1SED4(yCount, xCount), mat2SED4(yCount, xCount), mat1SED5(yCount, xCount), &
+                     mat2SED5(yCount, xCount), mat1SED6(yCount, xCount), mat2SED6(yCount, xCount), &
+                     mat1SED7(yCount, xCount), mat2SED7(yCount, xCount), mat1SED8(yCount, xCount), &
+                     mat2SED8(yCount, xCount), mat1SED9(yCount, xCount), mat2SED9(yCount, xCount), &
+                     mat1SED10(yCount, xCount), mat2SED10(yCount, xCount), mat1SED11(yCount, xCount), &
+                     mat2SED11(yCount, xCount) )
 
 
             allocate(mv(NA), ofh(NA), ofhB(NA), rh(NA))
@@ -195,8 +210,9 @@ module sed_config
             implicit none
 
             !> Set directory paths
-            filepathOUTFIELD = trim(ADJUSTL(MESHdir)) // trim(ADJUSTL(OUTFIELDfolder)) // "/"
-            filepathRBM = trim(ADJUSTL(MESHdir))
+            !filepathOUTFIELD = trim(ADJUSTL(MESHdir)) // trim(ADJUSTL(OUTFIELDfolder)) // "/"
+            !> filepathRBM = trim(ADJUSTL(MESHdir))
+            sedi%filepathSED = trim(ADJUSTL(MESHdir))
 
             !> Set current date as start date
             currDate = startDate

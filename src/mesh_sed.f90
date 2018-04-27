@@ -122,21 +122,30 @@ program mesh_sed
     print *, 'DATE & TIME: ', dateIn
 
     !> Open and read header of MET DATA input files
-    call getMat1_MESH_OUTFIELD(filepathOUTFIELD, filenamePR, unitPR, mat1PR, date1PR, mat2PR, date2PR, dateIn, iosPR)
+    !call getMat1_MESH_OUTFIELD(filepathOUTFIELD, filenamePR, unitPR, mat1PR, date1PR, mat2PR, date2PR, dateIn, iosPR)
     !print *, date1PR, date2PR
     !call readHeader_MESH_OUTFIELD(filepathOUTFIELD, filenameEV, unitEV, mat1EV, date1EV, dateIn, iosEV)
-    call getMat1_MESH_OUTFIELD(filepathOUTFIELD, filenameEV, unitEV, mat1EV, date1EV, mat2EV, date2EV, dateIn, iosEV)
+    !call getMat1_MESH_OUTFIELD(filepathOUTFIELD, filenameEV, unitEV, mat1EV, date1EV, mat2EV, date2EV, dateIn, iosEV)
     !print *, date1EV, date2EV
     !stop
 
     !> Open and read header of OVERLAND FLOW DATA input file
-    call getMat1_MESH_OUTFIELD(filepathOUTFIELD, filenameWR, unitWR, mat1WR, date1WR, mat2WR, date2WR, dateIn, iosWR)
+    !call getMat1_MESH_OUTFIELD(filepathOUTFIELD, filenameWR, unitWR, mat1WR, date1WR, mat2WR, date2WR, dateIn, iosWR)
 
     !> Open and read header of IN-STREAM FLOW DATA
-    call getMat1_rbm_input(filepathRBM, filenameRBM, unitRBM, mat1RBM1, date1RBM1, mat1RBM2, date1RBM2, &
-                                     mat1RBM3, date1RBM3, mat1RBM4, date1RBM4, mat1RBM5, date1RBM5, mat1RBM6, date1RBM6, &
-                                     mat2RBM1, date2RBM1, mat2RBM2, date2RBM2, mat2RBM3, date2RBM3, mat2RBM4, date2RBM4, &
-                                     mat2RBM5, date2RBM5, mat2RBM6, date2RBM6, dateIn, iosRBM)
+!    call getMat1_rbm_input(filepathRBM, filenameRBM, unitRBM, mat1RBM1, date1RBM1, mat1RBM2, date1RBM2, &
+!                                     mat1RBM3, date1RBM3, mat1RBM4, date1RBM4, mat1RBM5, date1RBM5, mat1RBM6, date1RBM6, &
+!                                     mat2RBM1, date2RBM1, mat2RBM2, date2RBM2, mat2RBM3, date2RBM3, mat2RBM4, date2RBM4, &
+!                                     mat2RBM5, date2RBM5, mat2RBM6, date2RBM6, dateIn, iosRBM)
+
+    call getMat1_sed_input(sedi%filepathSED, sedi%filenameSED, sedi%unitSED, mat1SED1, date1SED1, mat1SED2, date1SED2, &
+                                     mat1SED3, date1SED3, mat1SED4, date1SED4, mat1SED5, date1SED5, mat1SED6, date1SED6, &
+                                     mat1SED7, date1SED7, mat1SED8, date1SED8, mat1SED9, date1SED9, mat1SED10, date1SED10, &
+                                     mat1SED11, date1SED11, &
+                                     mat2SED1, date2SED1, mat2SED2, date2SED2, mat2SED3, date2SED3, mat2SED4, date2SED4, &
+                                     mat2SED5, date2SED5, mat2SED6, date2SED6, mat2SED7, date2SED7, mat2SED8, date2SED8, &
+                                     mat2SED9, date2SED9, mat2SED10, date2SED10, mat2SED11, date2SED11, &
+                                     dateIn, sedi%iosSED)
 
 !    print *,   trim(date1RBM1), ' ', trim(date2RBM1)
 !    print *,   trim(date1RBM2), ' ', trim(date2RBM2)
@@ -172,7 +181,7 @@ program mesh_sed
         ! READING INPUT DATA
         !-----------------------------------------------------
         !> INTERPOLATING MET DATA
-        call readMetData
+        !call readMetData
         !print *, '->PREP: ', sum(mat1PR), ' ', sum(mv(:)%precip), ' ', sum(mat2PR)
         !print *, '->EVAP: ', sum(mat1EV), ' ', sum(mv(:)%evapotran), ' ', sum(mat2EV)
 
@@ -180,13 +189,17 @@ program mesh_sed
         !print *, 'Reading MET DATA'
 
         !> INTERPOLATING OVERLAND FLOW DATA
-        call readOverLandFlowData
+        !call readOverLandFlowData
         !print *, date1WR, date2WR
         !print *, 'OVERLAND FLOW DATA'
 
         !> INTERPOLATING IN-STREAM FLOW DATA
-        call readInStreamFlowData
+        !call readInStreamFlowData
         !print *, 'Reading IN-STREAM FLOW DATA'
+
+        !> READ sed_input.r2c (MESH OUTPUT FILE)
+        call readMESHoutputData()
+
 
         !print *, sum(mv(:)%precip), " ",sum(mv(:)%evapotran), " ", sum(ofh(:)%discharge)," ", sum(rh(:)%discharge)
 
@@ -263,12 +276,12 @@ program mesh_sed
         !print*,
         !print*, '----5----'
         call cellConAndChanSufEle()
-        !do i=1,NA
-            !print*, csa(i)%Dz, csa(i)%SD, sum(csa(i)%C(:))
-            !if (isnan(csa(i)%Dz)) stop '"x" is a NaN'
-            !if (isnan(csa(i)%SD)) stop '"x" is a NaN'
-            !if (isnan(sum(csa(i)%C))) stop '"x" is a NaN'
-        !end do
+!        do i=1,NA
+!            print*, csa(i)%Dz, csa(i)%SD, sum(csa(i)%C(:))
+!            if (isnan(csa(i)%Dz)) stop '"x" is a NaN'
+!            if (isnan(csa(i)%SD)) stop '"x" is a NaN'
+!            if (isnan(sum(csa(i)%C))) stop '"x" is a NaN'
+!        end do
 
         !-----------------------------------------------------
         ! IN-STREAM TRANSPORT
@@ -276,10 +289,10 @@ program mesh_sed
         ! Instream routing
         ! - Longitudinal sediment velocity
         call longSedVelocity_grid
-        !do i = 1, NA
-        !    print *, sum(isrr(i)%Vs(:))
-        !    if (isnan(sum(isrr(i)%Vs(:)))) stop '"x" is a NaN'
-        !end do
+!        do i = 1, NA
+!            print *, sum(isrr(i)%Vs(:))
+!            if (isnan(sum(isrr(i)%Vs(:)))) stop '"x" is a NaN'
+!        end do
 
         ! - Sediment inflow to channel
         ! -- Channel bank erosion
@@ -289,14 +302,14 @@ program mesh_sed
 
         ! - In-stream sediment routing
         call inStreamRouting
-        do i=1,NA
-            do j = 1, nsedpar
-                !print*, i, j, isrr(i)%G(j), isrr(i)%C(j)
-            end do
-            !if (isnan(sum(isrr(i)%G(:))/nsedpar)) stop '"G" is a NaN'
-            !if (isnan(sum(isrr(i)%C(:))/nsedpar)) stop '"C" is a NaN'
-        end do
-        !stop
+!        do i=1,NA
+!            do j = 1, nsedpar
+!                print*, i, j, isrr(i)%G(j), isrr(i)%C(j), dateIn
+!            end do
+!            if (isnan(sum(isrr(i)%G(:))/nsedpar)) stop '"G" is a NaN'
+!            if (isnan(sum(isrr(i)%C(:))/nsedpar)) stop '"C" is a NaN'
+!        end do
+
         ! - Update frac diameters in active and parent layers
         call setFracDiame
 
@@ -325,14 +338,17 @@ program mesh_sed
     end do
 
     !> Clossing MET DATA files
-    call close_MESH_OUTFIELD(unitPR)
-    call close_MESH_OUTFIELD(unitEV)
+    !call close_MESH_OUTFIELD(unitPR)
+    !call close_MESH_OUTFIELD(unitEV)
 
     !> Clossing OVERLAND FLOW DATA file
-    call close_MESH_OUTFIELD(unitWR)
+    !call close_MESH_OUTFIELD(unitWR)
 
     !> Clossing IN-STREAM FLOW DATA file
-    call close_MESH_OUTFIELD(unitRBM)
+    !call close_MESH_OUTFIELD(unitRBM)
+
+    !> Clossing sed_input.r2c file
+    call close_MESH_OUTFIELD(sedi%unitSED)
 
 
     !> Closing the files to write time series at different grid points
