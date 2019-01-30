@@ -1,3 +1,18 @@
+!------------------------------------------------------------------------------
+! Sediment transport in cold region catchments: the MESH-SED model
+!------------------------------------------------------------------------------
+!
+!> @brief
+!> MODULE: sed_input
+!>
+!> @detail This module contains subroutines and functions to
+!>
+!> @author Luis Morales (LAM), GIWS & GWF.
+!> - July, 2017
+!> @date January, 2019-LAM
+!> - Documenting the code
+!> @todo
+!---------------------------------------------------------------------------
 !> Define new variables for the sediment transport model
 module sed_input
     use sed_vars

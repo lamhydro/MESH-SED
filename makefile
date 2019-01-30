@@ -65,9 +65,9 @@ all: ${OBJECTS}
 # ======================================================================
 # Target to create dependencies by the program makedepf90
 # ======================================================================
-depent:
-	makedepf90 $(SOURCES) >> makedepends
-
+depend .depend:
+#makedepf90 -o sa_mesh_sed $(SOURCES) > .depend
+	makedepf90 -o sa_mesh_sed $(VPATH)*.f90 > .depend
 
 # ======================================================================
 # Cleaning object files

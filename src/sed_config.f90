@@ -1,3 +1,23 @@
+!------------------------------------------------------------------------------
+! Sediment transport in cold region catchments: the MESH-SED model
+!------------------------------------------------------------------------------
+!
+!> @brief
+!> MODULE: sed_config
+!>
+!> @detail This module contains subroutine to allocate variables, set-up soil
+!> and vegetation grid-cell characteristics, save state variables for the early
+!> time step, estimate characteristics sediment particle diameters, set-up
+!> model initial conditions, set-up the grid cell connectivity, control time step
+!> and model execution termination.
+!>
+!> @author Luis Morales (LAM), GIWS & GWF.
+!> - July, 2017
+!> @date January, 2019-LAM
+!> - Documenting the code
+!> @todo
+!---------------------------------------------------------------------------
+
 module sed_config
     use sed_vars
 
@@ -6,6 +26,18 @@ module sed_config
     contains
 
         ! Allocating variables
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Allocate variables
+        !>
+        !> @detail Allocate all static and dynamic variables that change in time.
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !> @todo
+        !---------------------------------------------------------------------------
         subroutine sed_allocate_var
 
             implicit none
@@ -67,7 +99,20 @@ module sed_config
 
         end subroutine sed_allocate_var
 
-
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Set up soil and vegetation attributes to each cell.
+        !>
+        !> @detail Assign to each active grid cell soil and vegetation attributes.
+        !> Characteristics are assigned for overland soil, channel bank soil and
+        !> channel bed soil.
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !> @todo
+        !---------------------------------------------------------------------------
         subroutine setSoilAndVegeParamInCell()
         ! Save in each grid-cell all the parameters needed to estimate
         ! rain-drop detachment (D_R)
@@ -146,7 +191,20 @@ module sed_config
             end do
         end subroutine setSoilAndVegeParamInCell
 
-
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Save the value of state variables for a prior time step.
+        !>
+        !> @detail In finite difference methods, the estate variables are calculated
+        !> \f$(X^{t+1})\f$ sometimes based on the previous state \f$(X^{t-1})\f$ and
+        !> the current state \f$(X^{t-1})\f$.
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !> @todo
+        !---------------------------------------------------------------------------
         subroutine sed_before_vars()
             implicit none
 
@@ -187,6 +245,20 @@ module sed_config
 
         end subroutine sed_before_vars
 
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Estimate some characteristic diameters.
+        !>
+        !> @detail For each soil type at each active grid-cell, this subroutine
+        !> estimate \f$ D_{16}\f$, \f$ D_{50}\f$, \f$ D_{84}\f$ and \f$ D_{99}\f$
+        !> from the particle size density distribution.
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !> @todo
+        !---------------------------------------------------------------------------
         subroutine setFracDiame()
             use sed_tools
             implicit none
@@ -205,6 +277,23 @@ module sed_config
         end subroutine setFracDiame
 
 
+
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Set up initial conditions.
+        !>
+        !> @detail Set up initial values such as the path to the sediment transport
+        !> project, the startDate, the initial values of transport capacity, the
+        !> the initial sediment concentration, the initial depth of loose soil,
+        !> the initial thickness of active and parent bed layers and their sediment
+        !> class composition.
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !> @todo
+        !---------------------------------------------------------------------------
         subroutine sed_initial_conditions()
 
             implicit none
@@ -255,6 +344,20 @@ module sed_config
 
         end subroutine sed_initial_conditions
 
+
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Set up some variables related with the model configuration.
+        !>
+        !> @detail Set up the position (i,j) of active cells according to rank and
+        !> the cell neighbours to each active cell
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !> @todo
+        !---------------------------------------------------------------------------
         subroutine sed_config_init
 
             implicit none
@@ -309,7 +412,19 @@ module sed_config
 
         end subroutine sed_config_init
 
-
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Get the in and out reaches for each active cell.
+        !>
+        !> @detail For each active cell, get the upstream reaches that flow into the
+        !> cell and the downstream receiver cell.
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !> @todo
+        !---------------------------------------------------------------------------
         subroutine setInAndOutStreamToNode()
         !> For eachs node (cell) find the elements (reaches) that flow into and the element(reach)
         !> that flow out
@@ -346,7 +461,20 @@ module sed_config
 
         end subroutine setInAndOutStreamToNode
 
-        !> Set the x and y dimension of each grid cell. We assume square cells.
+
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Set the x and y dimension of each grid cell.
+        !>
+        !> @detail Set the x and y dimension of each grid cell assuming square
+        !> cells.
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !> @todo this need to be checked as grid cells are irregular and not squares
+        !---------------------------------------------------------------------------
         subroutine setGridCellSize
             implicit none
             do i = 1, NA
@@ -355,8 +483,19 @@ module sed_config
             end do
         end subroutine setGridCellSize
 
-
-        !> Update current date
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Set up the time step
+        !>
+        !> @detail Set up time step at each iteration so, year, month, day, jday,
+        !> hours, minutes and seconds are updated here.
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !> @todo
+        !---------------------------------------------------------------------------
         subroutine currDate_update()
             use sed_tools
             implicit none
@@ -453,6 +592,25 @@ module sed_config
 
         end subroutine currDate_update
 
+        !---------------------------------------------------------------------------
+        !> @brief
+        !> Set up the time step
+        !>
+        !> @detail Set up time step at each iteration so, year, month, day, jday,
+        !> hours, minutes and seconds are updated here.
+        !>
+        !> @author Luis Morales (LAM), GIWS & GWF.
+        !> - July, 2017
+        !> @date January, 2019-LAM
+        !> - Documenting the code
+        !>
+        !> @param[in] currDate% Current date (year julian-day hour minutes seconds)
+        !> @param[in] stopDate% Date (year julian-day hour minutes seconds) at which
+        !> the program stop
+        !> @return stopExec Logical value (.true. or .false.) to stop program
+        !> execution.
+        !> @todo
+        !---------------------------------------------------------------------------
         logical function stopExec()
             implicit none
 

@@ -1,0 +1,18 @@
+/**
+@mainpage MESH-SED: A sediment transport model for MESH
+
+@section Introduction
+
+A physically-based model to simulate sediment transport in river basins is coupled to the semi-distributed hydrological model MESH. The model is suitable to simulate the transport of solutes in river basin in cold regions. Some characteristics of the model include:
+- Loosely coupled with MESH
+- Physically-based watershed sediment transport model.
+- Developed based on SHETRAN and SHESED.
+- Semi-distributed model that work on a orthogonal grid (MESH grid)
+- Suitable for large-scale catchment to run on a continuous basis.
+- Include different sediment classes.
+
+The following figure shows a flow chart of the model.
+
+@image html /media/Data3/MESH/MESH_SED/doc/figures/programFlowDia-1.jpg
+
+*/
