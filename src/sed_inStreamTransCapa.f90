@@ -36,7 +36,7 @@ module sed_inStreamTransCapa
             sg = rhos/rho
 
             ! Dimensionless sediment diameter
-            Dgr = D*( gravi*(sg-1)/(v**2) )**(1/3)
+            Dgr = D*( gravi*(sg-1)/(v**2) )**(1./3)
 
             ! Transition exponent (n), initial motion parameter (A), and
             ! coeff. (c) and exponent (M) in the sed. transport function
@@ -120,7 +120,7 @@ module sed_inStreamTransCapa
             DA = 1.62*D50*((D84/D16)**(-0.28))
 
             ! Dimensionless grainsize for DA
-            DgrA = DA * (gravi*(sg-1)/(v**2))**(1/3)
+            DgrA = DA * (gravi*(sg-1)/(v**2))**(1./3)
 
             ! Initial motion parameter for DA
             if (DgrA <= 60. .and. DgrA >= 1.) then
@@ -136,7 +136,7 @@ module sed_inStreamTransCapa
                     Am = A*(0.4*((Dm(i)/DA)**(-0.5)) + 0.6)
 
                     ! Dimensionless sediment diameter for Dm
-                    Dgrm = Dm(i)*( gravi*(sg-1)/(v**2) )**(1/3)
+                    Dgrm = Dm(i)*( gravi*(sg-1)/(v**2) )**(1./3)
 
                     ! Transition exponent (n), and
                     ! coeff. (c) and exponent (M) in the sed. transport function
@@ -211,7 +211,7 @@ module sed_inStreamTransCapa
             DA = 1.62*D50*((D84/D16)**(-0.28))
 
             ! Dimensionless grainsize for DA
-            DgrA = DA * (gravi*(sg-1)/(v**2))**(1/3)
+            DgrA = DA * (gravi*(sg-1)/(v**2))**(1./3)
 
             ! Initial motion parameter for DA
             if (DgrA <= 60. .and. DgrA >= 1.) then
@@ -224,7 +224,7 @@ module sed_inStreamTransCapa
             Am = A*(0.4*((Dm/DA)**(-0.5)) + 0.6)
 
             ! Dimensionless sediment diameter for Dm
-            Dgrm = Dm*( gravi*(sg-1)/(v**2) )**(1/3)
+            Dgrm = Dm*( gravi*(sg-1)/(v**2) )**(1./3)
 
             ! Transition exponent (n), and
             ! coeff. (c) and exponent (M) in the sed. transport function

@@ -5,13 +5,15 @@
 !> @brief
 !> MODULE: sed_input
 !>
-!> @detail This module contains subroutines and functions to
+!> @detail This module contains subroutines and functions to read the input
+!> required by MESH-SED
 !>
 !> @author Luis Morales (LAM), GIWS & GWF.
 !> - July, 2017
 !> @date January, 2019-LAM
 !> - Documenting the code
-!> @todo
+!> @todo There are some unused subroutines/functions that can be commented
+!> in order ignore them in the compilation.
 !---------------------------------------------------------------------------
 !> Define new variables for the sediment transport model
 module sed_input
@@ -715,7 +717,7 @@ module sed_input
                 ofh(i)%width = sedi%CEWI(ipos(i),jpos(i)) !*  11. Cell width (m).
                 ofh(i)%discharge = (ofh(i)%depth*0.001/0.34)**(1/0.341) ! Overland flow discharge in m3/s. Eq. According to Allen et al, 1994
                 mannDisc = (1/0.060)*(ofh(i)%depth*0.001*ofh(i)%width)*(ofh(i)%slope**0.5)* &
-                            (ofh(i)%depth*0.001*ofh(i)%width/(2*ofh(i)%depth*0.001 + ofh(i)%width))**(2/3)
+                            (ofh(i)%depth*0.001*ofh(i)%width/(2*ofh(i)%depth*0.001 + ofh(i)%width))**(2./3)
                 if (ofh(i)%depth /= 0.) then
                     ofh(i)%velocity = ofh(i)%discharge/((ofh(i)%depth/1000.)*ofh(i)%width)               ! Water flow velocity (m/s).
                     mannVel = mannDisc/((ofh(i)%depth/1000.)*ofh(i)%width)
@@ -743,6 +745,7 @@ module sed_input
                 !end if
 
             end do
+            print *, mv(100)%precip, ofh(100)%discharge, rh(100)%discharge, rh(100)%depth
 
 
         end subroutine readMESHoutputData
