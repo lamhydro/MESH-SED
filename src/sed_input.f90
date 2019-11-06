@@ -5,13 +5,15 @@
 !> @brief
 !> MODULE: sed_input
 !>
-!> @detail This module contains subroutines and functions to
+!> @detail This module contains subroutines and functions to read the input
+!> required by MESH-SED
 !>
 !> @author Luis Morales (LAM), GIWS & GWF.
 !> - July, 2017
 !> @date January, 2019-LAM
 !> - Documenting the code
-!> @todo
+!> @todo There are some unused subroutines/functions that can be commented
+!> in order ignore them in the compilation.
 !---------------------------------------------------------------------------
 !> Define new variables for the sediment transport model
 module sed_input
@@ -154,9 +156,6 @@ module sed_input
                 read(unit = unitParam, fmt = '(a15, a15)') ofie(i)%varname, ofie(i)%sedname
                 ofie(i)%idsedclass = getIdSedClass(ofie(i)%sedname)
             end do
-
-
-
             !stop
 
 
@@ -188,6 +187,9 @@ module sed_input
                 end if
             end do
         end function getIdSedClass
+
+
+
 
 
         !> Read "MESH_sed_gridCell.ini" file.
@@ -348,6 +350,36 @@ module sed_input
             close(unit = unitSoVeCha)
 
         end subroutine read_sed_soilVegChan
+
+        !> Read "MESH_sed_reservoir.ini" file that characterize reservoir in the basin
+        subroutine read_sed_reservoir
+            implicit none
+
+            ! Open the file
+            open(unit = unitReser,file=trim(ADJUSTL(casedir)) // "MESH_sed_reservoir.ini", &
+                status="old",action="read",iostat=ios)
+            if (ios /= 0) then
+                close(unit = unitParam)
+                print *, "The file ", "MESH_sed_reservoir.ini", " could not be opened."
+                print *, "Stopping..."
+                stop
+
+            else
+                print *, 'READING: MESH_sed_reservoir.ini '
+            end if
+            read(unit = unitReser,fmt = *)
+            read(unit = unitReser,fmt = *) NRESE
+            read(unit = unitReser,fmt = *)
+            read(unit = unitReser,fmt = *)
+            allocate(rese(NRESE))
+            do i = 1, NRESE
+                read(unit = unitReser, fmt = '(A15, I10, 2(F15.2))') rese(i)%name, rese(i)%rank, rese(i)%area, rese(i)%vol
+                !print *, rese(i)%name, rese(i)%rank, rese(i)%area, rese(i)%vol
+            end do
+
+            close(unit = unitReser)
+        end subroutine read_sed_reservoir
+
 
         !> Read "MESH_drainage_database.r2c" file. This is a input file for
         !> MESH.
@@ -641,51 +673,51 @@ module sed_input
         end subroutine readOverLandFlowData
 
 
-        subroutine readInStreamFlowData
-            implicit none
-
-            !call read_rbm_input(unit_rbm_input, DISC, INFL, QDIF, DEPT, WIDT, VELO, dateTime)
-
-            !call interp_rbm_input(filepathRBM, filenameRBM, DISC, dateIn, 1)
-            !call interp_rbm_input(filepathRBM, filenameRBM, INFL, dateIn, 2)
-            !call interp_rbm_input(filepathRBM, filenameRBM, QDIF, dateIn, 3)
-            !call interp_rbm_input(filepathRBM, filenameRBM, DEPT, dateIn, 4)
-            !call interp_rbm_input(filepathRBM, filenameRBM, WIDT, dateIn, 5)
-            !call interp_rbm_input(filepathRBM, filenameRBM, VELO, dateIn, 6)
-
-            call interp2_rbm_input(unitRBM, mat1RBM1, date1RBM1, mat1RBM2, date1RBM2, &
-                                     mat1RBM3, date1RBM3, mat1RBM4, date1RBM4, mat1RBM5, date1RBM5, mat1RBM6, date1RBM6, &
-                                     mat2RBM1, date2RBM1, mat2RBM2, date2RBM2, mat2RBM3, date2RBM3, mat2RBM4, date2RBM4, &
-                                     mat2RBM5, date2RBM5, mat2RBM6, date2RBM6, DISC, INFL, QDIF, DEPT, WIDT, &
-                                     VELO, dateIn, iosRBM)
-
-!            print *, '->DISC : ', sum(mat1RBM1), ' ',sum(DISC) ,' ', sum(mat2RBM1)
-!            print *, '->INFL : ', sum(mat1RBM2), ' ',sum(INFL) ,' ', sum(mat2RBM2)
-!            print *, '->QDIF : ', sum(mat1RBM3), ' ',sum(QDIF) ,' ', sum(mat2RBM3)
-!            print *, '->DEPT : ', sum(mat1RBM4), ' ',sum(DEPT) ,' ', sum(mat2RBM4)
-!            print *, '->WIDT : ', sum(mat1RBM5), ' ',sum(WIDT) ,' ', sum(mat2RBM5)
-!            print *, '->VELO : ', sum(mat1RBM6), ' ',sum(VELO) ,' ', sum(mat2RBM6)
-
-            do i = 1, NA
-                rh(i)%slope = shd%SLOPE_CHNL(ipos(i),jpos(i)) ! In-stream water surface slope. It is aproximate to the channel bottom slope.
-                rh(i)%velocity = VELO(ipos(i),jpos(i)) ! Channel flow velocity (m/s)
-                rh(i)%width =  WIDT(ipos(i),jpos(i)) ! Channel width (m)
-                rh(i)%depth = DEPT(ipos(i),jpos(i)) ! Channel water depth (m)
-                rh(i)%discharge = DISC(ipos(i),jpos(i)) ! In-stream discharge (m3/s). Assume a rectagular section
-                rh(i)%length = shd%CHNL_LEN(ipos(i),jpos(i)) ! Channel reach length
-                if (i == 1325 ) then
-                    print *, '-->', i, rh(i)%velocity, rh(i)%depth, 0.34*rh(i)%discharge**0.341, rh(i)%width, rh(i)%discharge
-                end if
-
-            end do
-!            print *, '->DISC : ', minval(rh(:)%discharge), ' ',maxval(rh(:)%discharge)
-!            print *, '->INFL : ', minval(INFL), ' ',maxval(INFL)
-!            print *, '->DEPT : ', minval(rh(:)%depth), ' ',maxval(rh(:)%depth)
-!            print *, '->WIDT : ', minval(rh(:)%width), ' ',maxval(rh(:)%width)
-!            print *, '->VELO : ', minval(rh(:)%velocity), ' ',maxval(rh(:)%velocity)
-!            print *, '->LENG : ', minval(rh(:)%length), ' ',maxval(rh(:)%length)
-
-        end subroutine readInStreamFlowData
+!        subroutine readInStreamFlowData
+!            implicit none
+!
+!            !call read_rbm_input(unit_rbm_input, DISC, INFL, QDIF, DEPT, WIDT, VELO, dateTime)
+!
+!            !call interp_rbm_input(filepathRBM, filenameRBM, DISC, dateIn, 1)
+!            !call interp_rbm_input(filepathRBM, filenameRBM, INFL, dateIn, 2)
+!            !call interp_rbm_input(filepathRBM, filenameRBM, QDIF, dateIn, 3)
+!            !call interp_rbm_input(filepathRBM, filenameRBM, DEPT, dateIn, 4)
+!            !call interp_rbm_input(filepathRBM, filenameRBM, WIDT, dateIn, 5)
+!            !call interp_rbm_input(filepathRBM, filenameRBM, VELO, dateIn, 6)
+!
+!            call interp2_rbm_input(unitRBM, mat1RBM1, date1RBM1, mat1RBM2, date1RBM2, &
+!                                     mat1RBM3, date1RBM3, mat1RBM4, date1RBM4, mat1RBM5, date1RBM5, mat1RBM6, date1RBM6, &
+!                                     mat2RBM1, date2RBM1, mat2RBM2, date2RBM2, mat2RBM3, date2RBM3, mat2RBM4, date2RBM4, &
+!                                     mat2RBM5, date2RBM5, mat2RBM6, date2RBM6, DISC, INFL, QDIF, DEPT, WIDT, &
+!                                     VELO, dateIn, iosRBM)
+!
+!!            print *, '->DISC : ', sum(mat1RBM1), ' ',sum(DISC) ,' ', sum(mat2RBM1)
+!!            print *, '->INFL : ', sum(mat1RBM2), ' ',sum(INFL) ,' ', sum(mat2RBM2)
+!!            print *, '->QDIF : ', sum(mat1RBM3), ' ',sum(QDIF) ,' ', sum(mat2RBM3)
+!!            print *, '->DEPT : ', sum(mat1RBM4), ' ',sum(DEPT) ,' ', sum(mat2RBM4)
+!!            print *, '->WIDT : ', sum(mat1RBM5), ' ',sum(WIDT) ,' ', sum(mat2RBM5)
+!!            print *, '->VELO : ', sum(mat1RBM6), ' ',sum(VELO) ,' ', sum(mat2RBM6)
+!
+!            do i = 1, NA
+!                rh(i)%slope = shd%SLOPE_CHNL(ipos(i),jpos(i)) ! In-stream water surface slope. It is aproximate to the channel bottom slope.
+!                rh(i)%velocity = VELO(ipos(i),jpos(i)) ! Channel flow velocity (m/s)
+!                rh(i)%width =  WIDT(ipos(i),jpos(i)) ! Channel width (m)
+!                rh(i)%depth = DEPT(ipos(i),jpos(i)) ! Channel water depth (m)
+!                rh(i)%discharge = DISC(ipos(i),jpos(i)) ! In-stream discharge (m3/s). Assume a rectagular section
+!                rh(i)%length = shd%CHNL_LEN(ipos(i),jpos(i)) ! Channel reach length
+!                if (i == 1325 ) then
+!                    print *, '-->', i, rh(i)%velocity, rh(i)%depth, 0.34*rh(i)%discharge**0.341, rh(i)%width, rh(i)%discharge
+!                end if
+!
+!            end do
+!!            print *, '->DISC : ', minval(rh(:)%discharge), ' ',maxval(rh(:)%discharge)
+!!            print *, '->INFL : ', minval(INFL), ' ',maxval(INFL)
+!!            print *, '->DEPT : ', minval(rh(:)%depth), ' ',maxval(rh(:)%depth)
+!!            print *, '->WIDT : ', minval(rh(:)%width), ' ',maxval(rh(:)%width)
+!!            print *, '->VELO : ', minval(rh(:)%velocity), ' ',maxval(rh(:)%velocity)
+!!            print *, '->LENG : ', minval(rh(:)%length), ' ',maxval(rh(:)%length)
+!
+!        end subroutine readInStreamFlowData
 
 
         subroutine readMESHoutputData
@@ -705,8 +737,20 @@ module sed_input
 
             do i = 1, NA
                 !> Met variables
-                mv(i)%precip = sedi%PREP(ipos(i),jpos(i)) !*  7.  Precipitation (mm h-1). Note: Accumulated over the time-step.
-                mv(i)%evapotran = sedi%EVAP(ipos(i),jpos(i))!*  8.  Evapotranspiration (mm h-1). Note: Of evapotranspiration accumulated over the time-step. UNITS????????????????
+
+                !*  7.  Precipitation (mm h-1). Note: Accumulated over the time-step.
+                if (sedi%PREP(ipos(i),jpos(i)) < 0.) then ! Check for negative values
+                  mv(i)%precip = 0.
+                else
+                  mv(i)%precip = sedi%PREP(ipos(i),jpos(i))
+                end if
+
+                !*  8.  Evapotranspiration (mm h-1). Note: Of evapotranspiration accumulated over the time-step. UNITS????????????????
+                if (sedi%EVAP(ipos(i),jpos(i)) < 0.) then ! Check for negative values
+                  mv(i)%evapotran = 0.
+                else
+                  mv(i)%evapotran = sedi%EVAP(ipos(i),jpos(i))
+                end if
 
 
                 !> Overland flow hydraulic variables
@@ -715,7 +759,7 @@ module sed_input
                 ofh(i)%width = sedi%CEWI(ipos(i),jpos(i)) !*  11. Cell width (m).
                 ofh(i)%discharge = (ofh(i)%depth*0.001/0.34)**(1/0.341) ! Overland flow discharge in m3/s. Eq. According to Allen et al, 1994
                 mannDisc = (1/0.060)*(ofh(i)%depth*0.001*ofh(i)%width)*(ofh(i)%slope**0.5)* &
-                            (ofh(i)%depth*0.001*ofh(i)%width/(2*ofh(i)%depth*0.001 + ofh(i)%width))**(2/3)
+                            (ofh(i)%depth*0.001*ofh(i)%width/(2*ofh(i)%depth*0.001 + ofh(i)%width))**(2./3)
                 if (ofh(i)%depth /= 0.) then
                     ofh(i)%velocity = ofh(i)%discharge/((ofh(i)%depth/1000.)*ofh(i)%width)               ! Water flow velocity (m/s).
                     mannVel = mannDisc/((ofh(i)%depth/1000.)*ofh(i)%width)
@@ -730,19 +774,38 @@ module sed_input
 
 
                 !> In-stream variables
-                rh(i)%slope = sedi%CHSL(ipos(i),jpos(i)) !*  5.  Channel slope (m m-1). slope = sqrt(SLOPE_CHNL)
-                rh(i)%velocity = sedi%VELO(ipos(i),jpos(i)) !*  6.  Stream velocity (m s-1). Take stream speed to be average flow (m3 s-1) divided by channel x-sec area (m2) (from rte_sub.f).
-                rh(i)%width = sedi%WIDT(ipos(i),jpos(i)) !*  3.  Channel width (m).
+                !> @todo rh(i)%slope was to high so it was elevated to power of 2
+
                 rh(i)%discharge = sedi%DISC(ipos(i),jpos(i)) !*  1.  Average flow (discharge) (m3 s-1). Note: Averaged over the time-step.
                 rh(i)%length = sedi%CHLE(ipos(i),jpos(i)) !*  4.  Channel length (m).
-                rh(i)%depth = sedi%DEPT(ipos(i),jpos(i)) !*  2.  Channel depth (m).
-                !rh(i)%depth = 0.34*rh(i)%discharge**0.341 !*  Channel depth (m). Estimated based on Allen et al, 1994 as MESH water depth is cte
+                if (rh(i)%wbody == 0) then  !> For channels
+                    rh(i)%width = sedi%WIDT(ipos(i),jpos(i)) !*  3.  Channel width (m).
+                    rh(i)%slope = 1.*( sedi%CHSL(ipos(i),jpos(i)) )**2 !*  5.  Channel slope (m m-1). slope = sqrt(SLOPE_CHNL)
+                    rh(i)%velocity = sedi%VELO(ipos(i),jpos(i)) !*  6.  Stream velocity (m s-1). Take stream speed to be average flow (m3 s-1) divided by channel x-sec area (m2) (from rte_sub.f).
+                    !rh(i)%depth = sedi%DEPT(ipos(i),jpos(i)) !*  2.  Channel depth (m).
+                    !rh(i)%depth = 0.34*rh(i)%discharge**0.341 !*  Channel depth (m). Estimated based on Allen et al, 1994 as MESH water depth is cte
+
+                    !>  Channel depth (m). Estimated assuming rectangular section
+                    if (rh(i)%velocity <= 1e-6  .OR. rh(i)%width <= 1e-6) then
+                        rh(i)%depth = 0.
+                    else
+                        rh(i)%depth = rh(i)%discharge/(rh(i)%velocity * rh(i)%width)
+                    end if
+
+                else                 !> for reservoir
+                    rh(i)%width = rh(i)%areaRe/rh(i)%length
+                    rh(i)%slope = 0.
+                    rh(i)%velocity = rh(i)%discharge/rh(i)%areaRe
+
+                end if
+
 
                 !if (i == 1325 ) then
                     !print *, '-->', i, rh(i)%velocity, rh(i)%depth, 0.34*rh(i)%discharge**0.341, rh(i)%width, rh(i)%discharge
                 !end if
 
             end do
+            !print *, mv(324)%precip, ofh(324)%discharge, ofh(324)%depth, rh(324)%discharge, rh(324)%depth
 
 
         end subroutine readMESHoutputData
@@ -1095,7 +1158,7 @@ module sed_input
                 end do
                 read(unit = fileunit, fmt = *, iostat=ios)
 
-
+                print *, date11
                 if (date1111%year == dateC%year) then
                     if (date1111%month == dateC%month) then
                         if (date1111%day == dateC%day) then

@@ -23,7 +23,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gfortran" />
-				<Option parameters="test" />
+				<Option parameters="../MESH_SED_ARB" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -68,6 +68,7 @@
 		<Unit filename="../sed_inStreamRouting.f90" />
 		<Unit filename="../sed_inStreamTransCapa.f90" />
 		<Unit filename="../sed_input.f90" />
+		<Unit filename="../sed_massBalance.f90" />
 		<Unit filename="../sed_output.f90" />
 		<Unit filename="../sed_overlandFlowDetachment.f90" />
 		<Unit filename="../sed_overlandFlowTransCapa.f90" />

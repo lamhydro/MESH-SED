@@ -206,6 +206,8 @@ module sed_vars
 
     type, extends(overlandFlowHydraulics) :: reachHydraulics !< Overland flow hydraulic variables at each grid cell extended for channel.
         real :: length
+        integer :: wbody
+        real :: areaRe, volRe
     end type reachHydraulics
     !type(reachHydraulics), dimension(NA) :: rh
     type(reachHydraulics), dimension(:), allocatable :: rh
@@ -240,6 +242,7 @@ module sed_vars
     integer, parameter :: unitEV = 80
     integer, parameter :: unitWR = 100
     integer, parameter :: unitRBM = 120
+    integer, parameter :: unitReser = 130
 
     !integer, parameter :: unitOUTFIELDprecip = 50
     !integer, parameter :: unitOUTFIELDevap = 60
@@ -388,6 +391,27 @@ module sed_vars
     end type inStreamRoutingNode
 
 
+    type :: cellMassBalance !< Contain modelled values of mass balance at each cell
+        real, dimension(nsedpar) :: L_in, L_bank, L_dep, L_hill, L_out, L_res !< Loads for the mass balance
+        real, dimension(nsedpar) :: C_pot, C !< Old and new sediment concentration for each sediment class
+    end type cellMassBalance
+    type(cellMassBalance), dimension(:), allocatable :: cmb
+
+    type :: cellMassBalance_h !< Contain modelled values of mass balance at each cell at hourly time steps
+        real :: L_in, L_bank, L_dep, L_hill, L_out, L_res
+        real :: C_pot, C
+        real :: rhQ, rhH
+    end type cellMassBalance_h
+    type(cellMassBalance_h), dimension(:), allocatable :: cmb_h
+
+    integer :: NRESE !< Number of reservoirs
+    type :: reservoirChara !< Contain reservoir information
+        character(len=15) :: name
+        integer :: rank
+        real :: area, vol
+    end type reservoirChara
+    type(reservoirChara), dimension(:), allocatable :: rese
+
 
 
     !    !Soil detachment by rainfall impact
@@ -417,6 +441,11 @@ module sed_vars
     type(inOutNode), dimension(:), allocatable :: ion
     type(inStreamRoutingReach), dimension(:), allocatable :: isrr, isrrB
     type(inStreamRoutingNode), dimension(:), allocatable :: isrn
+
+
+    integer :: niter
+
+
 
     !real, allocatable :: C(:)
 

@@ -38,7 +38,7 @@ OBJECTS=	sed_vars.o \
 			sed_tools.o \
 			sed_config.o \
 			sed_input.o \
-			sed_output.o 
+			sed_output.o
 
 #Modules
 OBJECTS+=	sed_rainDropDetachment.o \
@@ -48,7 +48,8 @@ OBJECTS+=	sed_rainDropDetachment.o \
 			sed_fineSedDepoAndResus.o \
 			sed_inStreamTransCapa.o \
 			sed_inStreamRouting.o \
-			sed_chanBankErosion.o
+			sed_chanBankErosion.o \
+			sed_massBalance.o
 
 
 

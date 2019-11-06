@@ -1,0 +1,5 @@
+FOBJ=./src:*.o 
+
+sa_mesh_sed: $(FOBJ)
+	$(FC) -o $@ $(FFLAGS) $(LDFLAGS) $(FOBJ) $(LIBS)
+

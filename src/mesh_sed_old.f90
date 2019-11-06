@@ -12,7 +12,6 @@ program mesh_sed
     use sed_hillslopeRouting
     use sed_inStreamRouting
     use sed_chanBankErosion
-    use sed_massBalance
 
     ! Declare internal variables
     !integer :: titer
@@ -45,9 +44,6 @@ program mesh_sed
 
     !> Read 'MESH_sed_soilVegChan.ini'
     call read_sed_soilVegChan
-
-    !> Read 'MESH_sed_reservoir.ini'
-    call read_sed_reservoir
 
 
 
@@ -160,13 +156,13 @@ program mesh_sed
 
 
     !> Open the files to write time series at different grid points
-    call openFilesForGrPointTS_2()
+    call openFilesForGrPointTS()
 
     !> Open the files to write time series of fields (griddded data)
-    !call openFilesForFieldTS()
+    call openFilesForFieldTS()
 
     ! Save initial variables  for next time-step calculation
-    !call sed_before_vars()
+    call sed_before_vars()
 
     ! MAIN LOOP: ITERATION THROUGH TIME
 10  format('"',I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000"')
@@ -207,58 +203,6 @@ program mesh_sed
         !> READ sed_input.r2c (MESH OUTPUT FILE)
         call readMESHoutputData()
 
-        !-----------------------------------------------------
-        ! HILLSLOPE LOADS
-        !-----------------------------------------------------
-        call hillSlopeLoad_grid()
-
-
-        !-----------------------------------------------------
-        ! INSTREAM UPSTREAM LOADS
-        !-----------------------------------------------------
-        !call upstreamLoad_grid()
-
-
-        !-----------------------------------------------------
-        ! RIVER BANK EROSION LOADS
-        !-----------------------------------------------------
-        call bankEroLoad_grid()
-
-
-        !-----------------------------------------------------
-        ! RIVER BED EROSION(RESUSPENSION) LOADS
-        !-----------------------------------------------------
-        call streamBottomResLoad_grid()
-
-        !-----------------------------------------------------
-        ! MASS BALANCE AT EACH INDIVIDUAL CELL TO ESTIMATE NEW
-        ! CONCENTRATIONS
-        !-----------------------------------------------------
-        call massBalance2()
-        !print *, 'L_bank: ', sum(cmb(1325)%L_bank(:)), 'L_hill: ', sum(cmb(1325)%L_hill(:)), 'L_in: ',&
-        !            sum(cmb(1325)%L_in(:)), 'L_res: ', sum(cmb(1325)%L_res(:)), rh(1325)%depth, &
-        !            sum(cmb(1325)%C(:)*cbsca(1325)%frac(:)), &
-        !            sum(cmb(1325)%C_pot(:)*cbsca(1325)%frac(:)), rh(1325)%discharge
-
-        !print *, 'L_bank: ', sum(cmb(1000)%L_bank(:)), 'L_hill: ', sum(cmb(1000)%L_hill(:)), 'L_in: ',&
-        !            sum(cmb(1000)%L_in(:)), 'L_res: ', sum(cmb(1000)%L_res(:)), rh(1000)%depth, &
-        !            sum(cmb(1000)%C(:)*cbsca(1000)%frac(:)), &
-        !            sum(cmb(1000)%C_pot(:)*cbsca(1000)%frac(:)), rh(1000)%discharge
-
-        !print *, sum(cmb(999)%C(:)*cbsca(999)%frac(:)), rh(999)%velocity, sum(cmb(999)%L_out(:)), &
-        !        sum(cmb(1000)%C(:)*cbsca(1000)%frac(:)), rh(1000)%velocity, sum(cmb(1000)%L_out(:))
-        !print *, sum(cbsca(1325)%frac(:)), sum(bsca(1325)%frac(:))
-        !stop
-
-        !stop
-        !do i=1,NA
-            !write(*,'(13(F15.2))')  D_R(i,:)
-        !print*, maxval(cmb(1325)%C(:)), minval(cmb(1325)%C(:)), rh(1325)%discharge
-        !print*, 'herere: ->',  sum(cmb(1325)%L_bank(:)), rh(1325)%discharge, rh(1325)%depth, &
-        !        rh(1325)%length, sum(cmb(1325)%L_bank(:))/(2*rh(1325)%depth*rh(1325)%length)
-        !L_in, L_bank, L_dep, L_hill
-        !end do
-
 
         !print *, sum(mv(:)%precip), " ",sum(mv(:)%evapotran), " ", sum(ofh(:)%discharge)," ", sum(rh(:)%discharge)
 
@@ -266,7 +210,7 @@ program mesh_sed
         ! HILLSLOPE TRANSPORT
         !-----------------------------------------------------
         !> Raindrop detachment
-        !call rainDropDetachCell()
+        call rainDropDetachCell()
         !print *, dateIn,',', maxval(mv(:)%precip)-minval(mv(:)%precip), ',', minval(D_R(:)), ',', maxval(D_R(:))
         !do i=1,NA
             !write(*,'(13(F15.2))')  D_R(i,:)
@@ -274,7 +218,7 @@ program mesh_sed
         !end do
 
         !> Overland flow detachment
-        !call overlandFlowDetachCell()
+        call overlandFlowDetachCell()
         !print *, dateIn, ',', minval(ofh(:)%depth), ',', maxval(ofh(:)%depth), &
         !',',minval(D_F(:)), ',', maxval(D_F(:)), ',', &
          !maxval(sca(:)%overlandDetach)
@@ -284,13 +228,13 @@ program mesh_sed
         !end do
 
         ! Calculate variables at the cell edges
-        !call varsAtCellEdge()
+         call varsAtCellEdge()
 
         ! Hillslope routing
         !- 1) Estimate transport capacity at the outlet of the cell
         !print*,
         !print*, '----1----'
-        !call overlandFlowTransCapa_outCell()
+        call overlandFlowTransCapa_outCell()
         !print *,dateIn, ',', G_out(56)%east,',', G_out(56)%north,',', G_out(56)%west,',', G_out(56)%south
         !do i=1,NA
             !write(*,'(13(F15.2))')  G(i,:)
@@ -302,7 +246,7 @@ program mesh_sed
         !- 2) Estimate potential sediment concentration
         !print*,
         !print*, '----2----'
-        !call potentialSedConc()
+        call potentialSedConc()
         !print *,dateIn, ',', sum(csa(1)%C(:)),',', sum(csa(56)%C(:)),',', sum(csa(130)%C(:)),',', sum(csa(324)%C(:))
         !print *, minval(csa(:)%C), ' ', maxval(csa(:)%C)
         !do i=1,NA
@@ -317,7 +261,7 @@ program mesh_sed
         !- 3) Estimate potential change in surface elevation
         !print*,
         !print*, '----3----'
-        !call potentialChanSufEle()
+        call potentialChanSufEle()
         !print *,dateIn, ',', csa(1)%pot_Dz,',',csa(56)%pot_Dz,',', csa(130)%pot_Dz,',', csa(324)%pot_Dz, ',', &
         !minval(csa(:)%pot_Dz), ',',maxval(csa(:)%pot_Dz)
         !do i=1,NA
@@ -328,7 +272,7 @@ program mesh_sed
         !- 4) Estimate available change in surface elevation
         !print*,
         !print*, '----4----'
-        !call availableChanSufEle()
+        call availableChanSufEle()
         !print *,dateIn, ',', csa(1)%ava_Dz,',',csa(56)%ava_Dz,',', !csa(130)%ava_Dz,',', csa(324)%ava_Dz, ',', &
         !minval(csa(:)%ava_Dz), ',',maxval(csa(:)%ava_Dz)
 
@@ -342,9 +286,9 @@ program mesh_sed
         !- 5) Compare pot_Dz vs. ava_Dz
         !print*,
         !print*, '----5----'
-        !call cellConAndChanSufEle()
-        !print *,dateIn, ',',minval(csa(:)%Dz), ',', maxval(csa(:)%Dz),',',&
-        !sum(csa(1)%C(:)),',', sum(csa(150)%C(:)),',', sum(csa(324)%C(:))
+        call cellConAndChanSufEle()
+        print *,dateIn, ',',minval(csa(:)%Dz), ',', maxval(csa(:)%Dz),',',&
+        sum(csa(1)%C(:)),',', sum(csa(150)%C(:)),',', sum(csa(324)%C(:))
 !        do i=1,NA
 !            print*, csa(i)%Dz, csa(i)%SD, sum(csa(i)%C(:))
 !            if (isnan(csa(i)%Dz)) stop '"x" is a NaN'
@@ -357,7 +301,7 @@ program mesh_sed
         !-----------------------------------------------------
         ! Instream routing
         ! - Longitudinal sediment velocity
-        !call longSedVelocity_grid
+        call longSedVelocity_grid
 !        do i = 1, NA
 !            print *, sum(isrr(i)%Vs(:))
 !            if (isnan(sum(isrr(i)%Vs(:)))) stop '"x" is a NaN'
@@ -365,12 +309,12 @@ program mesh_sed
 
         ! - Sediment inflow to channel
         ! -- Channel bank erosion
-        !call grid_bankErosion
+        call grid_bankErosion
         ! -- Sediment inflows
-        !call flowSedInput
+        call flowSedInput
 
         ! - In-stream sediment routing
-        !call inStreamRouting
+        call inStreamRouting
 !        do i=1,NA
 !            do j = 1, nsedpar
 !                print*, i, j, isrr(i)%G(j), isrr(i)%C(j), dateIn
@@ -380,19 +324,21 @@ program mesh_sed
 !        end do
 
         ! - Update frac diameters in active and parent layers
-        !call setFracDiame
+        call setFracDiame
 
+        !-----------------------------------------------------
+        ! CHECKIG THE MASS BALANCE
+        !-----------------------------------------------------
 
 
         !-----------------------------------------------------
         ! WRITE OUT MODEL PRONOSTIC VARIABLES
         !-----------------------------------------------------
-        !call writeGrPointTS_2
-        call writeHourAveEstimate
-        !call writeFieldTS
+        call writeGrPointTS
+        call writeFieldTS
 
         ! Save variables at the current time step for next time-step calculation
-        !call sed_before_vars()
+        call sed_before_vars()
 
 
         if (stopExec()) exit
@@ -403,8 +349,7 @@ program mesh_sed
         call currDate_update
         write (dateIn, 10) currDate%year, &
         currDate%month,  currDate%day,  currDate%hour, currDate%mins, currDate%secs
-        print *, 'DATE & TIME: ', dateIn
-
+        !print *, 'DATE & TIME: ', dateIn
 
     end do
 
@@ -426,11 +371,217 @@ program mesh_sed
     call closeFilesForGrPointTS()
 
     !> Closing the files to write time series of fields (griddded data)
-    !call closeFilesForFieldTS()
+    call closeFilesForFieldTS()
+
+    !print *,'!------------------------------------------------------!'
+    !print *,'! ENDING : MESH-SED                                    !'
+    !print *,'!------------------------------------------------------!'
 
 
+!    ! MAIN LOOP: ITERATION THROUGH TIME
+!    titer = 1
+!    do
+!
+!
+!        !> READING MET DATA
+!        call readMetData
+!
+!        !> READING OVERLAND FLOW DATA
+!        call readOverLandFlowData
+!
+!
+!        !> READING IN-STREAM FLOW DATA
+!        call readInStreamFlowData
+!
+!
+!
+!
+!
+!
+!
+!!        ! The data set-up in this loop must come from the hydrological model
+!!        do i = 1, NA
+!!        !do i =1,yCount
+!!        !    do j = 1,xCount
+!!
+!!            ! Met. data
+!!            !precip(i) = 10. !rand()*500.              ! Precipitation in mm/h
+!!            !evapotran(i) = precip(i)*0.6/3.6e6 ! Evapotranspiration in m/s
+!!
+!!            ! Met. data
+!!            !mv(i)%precip = 10. !rand()*500.              ! Precipitation in mm/h
+!!            !mv(i)%evapotran = mv(i)%precip*0.6/3.6e6 ! Evapotranspiration in m/s
+!!
+!!            ! Overland flow data
+!!            !waterDepth(i) = 10. !rand()*20             ! Water depth in mm
+!!            !waterSslope(i) = 0.01               ! Water surface slope ~ bottom slope. It is read once!!
+!!            !flowWidth(i) = sqrt(DELX**2 + DELY**2)                 ! Flow width = cell width (m). It is read once!!
+!!            !flowVelocity(i) = 0.01                ! Water flow velocity (m/s).
+!!            !discharge(i) = waterDepth(i)*1.e-3*flowWidth(i)*flowVelocity(i) ! Discharge in the cell in m3/s
+!!
+!!            ! Overland flow data
+!!            ofh(i)%depth = 10. !rand()*20             ! Water depth in mm
+!!            ofh(i)%slope = 0.01               ! Water surface slope ~ bottom slope. It is read once!!
+!!            ofh(i)%width = sqrt(DELX**2 + DELY**2)                 ! Flow width = cell width (m). It is read once!!
+!!            ofh(i)%velocity = 0.01                ! Water flow velocity (m/s).
+!!            ofh(i)%discharge = ofh(i)%depth*1.e-3*ofh(i)%width*ofh(i)%velocity ! Discharge in the cell in m3/s
+!!
+!!            ! Instream flow data
+!!            rh(i)%slope = 0.01 ! In-stream water surface slope. It is aproximate to the channel bottom slope.
+!!            rh(i)%velocity = 0.02! Channel flow velocity (m/s)
+!!            rh(i)%width = 10. ! Channel width (m)
+!!            rh(i)%depth = 1.! Channel water depth (m)
+!!            rh(i)%discharge =rh(i)%velocity*(rh(i)%width*rh(i)%depth) ! In-stream discharge (m3/s). Assume a rectagular section
+!!            rh(i)%length = DELX ! Channel reach length
+!!
+!!        !    end do
+!!        !end do
+!!        end do
+!!        do i = 1, NA
+!!            !write(*,'(13(f10.2))')  waterDepth(i,:)
+!!            print*, waterDepth(i)
+!!        end do
+!
+!
+!
+!
+!        !-----------------------------------------------------
+!        ! HILLSLOPE TRANSPORT
+!        !-----------------------------------------------------
+!
+!        ! Raindrop detachment
+!        call rainDropDetachCell()
+!        !do i=1,NA
+!            !write(*,'(13(F15.2))')  D_R(i,:)
+!        !    print*, mv(i)%precip, ' ', D_R(i)
+!        !end do
+!
+!
+!        ! Overland flow detachment
+!        call overlandFlowDetachCell()
+!        !do i=1,NA
+!            !write(*,'(13(F15.2))')  D_F(i,:)
+!        !    print*, ofh(i)%depth, ' ',ofh(i)%slope, ' ', D_F(i)
+!        !end do
+!
+!    !    call overlandFlowTransCapaCell()
+!    !    do i=1,NA
+!    !        !write(*,'(13(F15.2))')  G(i,:)
+!    !        print*, G(i)
+!    !    end do
+!
+!        ! Calculate variables at the cell edges
+!         call varsAtCellEdge()
+!
+!        ! Hillslope routing
+!        !- 1) Estimate transport capacity at the outlet of the cell
+!        print*,
+!        print*, '----1----'
+!        call overlandFlowTransCapa_outCell()
+!        !do i=1,NA
+!            !write(*,'(13(F15.2))')  G(i,:)
+!        !    print*, i, G_out(i)%east, G_out(i)%north, G_out(i)%west, G_out(i)%south
+!        !end do
+!        DELTac = 0
+!        do while (DELTac < DELTout)
+!            ! Initilize variables
+!            call sed_before_vars()
+!
+!
+!
+!            !- 2) Estimate potential sediment concentration
+!            print*,
+!            print*, '----2----'
+!            call potentialSedConc()
+!            do i=1,NA
+!                !write(*,'(13(F15.2))')  G(i,:)
+!                !print*, i, F(i)%nfluxes, F(i)%east, F(i)%north, F(i)%west, F(i)%south !C(i)
+!                print*, csa(i)%C
+!            end do
+!
+!            !- 3) Estimate potential change in surface elevation
+!            print*,
+!            print*, '----3----'
+!            call potentialChanSufEle()
+!            do i=1,NA
+!                print*, csa(i)%pot_Dz
+!            end do
+!
+!            !- 4) Estimate available change in surface elevation
+!            print*,
+!            print*, '----4----'
+!            call availableChanSufEle()
+!            do i=1,NA
+!                print*, csa(i)%ava_Dz
+!            end do
+!
+!            !- 5) Compare pot_Dz vs. ava_Dz
+!            print*,
+!            print*, '----5----'
+!            call cellConAndChanSufEle()
+!            do i=1,NA
+!                print*, csa(i)%Dz, csa(i)%SD
+!            end do
+!
+!            DELTac = DELTac + DELT
+!
+!        end do
+!
+!
+!        !-----------------------------------------------------
+!        ! IN-STREAM TRANSPORT
+!        !-----------------------------------------------------
+!        ! Instream routing
+!        ! - Longitudinal sediment velocity
+!        call longSedVelocity_grid
+!
+!        ! - Sediment inflow to channel
+!        ! -- Channel bank erosion
+!        call grid_bankErosion
+!        ! -- Sediment inflows
+!        call flowSedInput
+!
+!        ! - In-stream sediment routing
+!        call inStreamRouting
+!        do i=1,NA
+!            print*, isrr(i)%G
+!        end do
+!        ! - Update frac diameters in active and parent layers
+!        call setFracDiame
+!
+!        print*,'-------'
+!        print*,'Time iter: ', titer
+!        print*,'-------'
+!
+!        if (titer>2) stop
+!        titer = titer + 1
+!        !stop
+!
+!    end do
+!
+!    ! Closing files containing outfields and rbm_input
+!    call closeFile(unitOUTFIELDprecip)
+!    call closeFile(unitOUTFIELDevap)
+!    call closeFile(unitOUTFIELDwr_runovf)
+!    call closeFile(unit_rbm_input)
+
+
+        !print*, '>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+        !do i=1,NA
+
+        !    print*, csaB%C(i)
+        !end do
+
+!    call hydroAtCellEdges()
+!    do i=1,NA
+!        !write(*,'(13(F10.2))')   waterDepth_edge(i,:)%south
+!        print*,
+!    end do
+
+    !do i = 1, ngru
+    !    print*, rainSoilEr(i)%soilVul, rainSoilEr(i)%damEffecSw
+    !end do
 
 
 
 end program mesh_sed
-

@@ -16,10 +16,10 @@ module sed_hillslopeRouting
                 k = 0
                 if (cn(i)%east /= 0.) then
                     !factor = 1/(cellSoilChar(i)%density*flowWidth(i)*waterDepth_edge(i)%east*1.e-3)
-                    if (cn(i)%east > i) then
+                    if (cn(i)%east > i) then ! Outflow from i to the eastern cell
                         F(i)%east = G_out(i)%east
                         F(i)%s_east = 0
-                    else
+                    else                     ! Inflow into i from the easter cell
                         F(i)%east = G_out(cn(i)%east)%west
                         F(i)%s_east = 1
                     end if
@@ -191,6 +191,8 @@ module sed_hillslopeRouting
         subroutine availableChanSufEle()
 
             implicit none
+            !print *, minval(sca(:)%density), maxval(sca(:)%density)
+            !stop
 
             do i = 1, NA
                 csa(i)%ava_Dz = -csa(i)%SD - DELT*(D_R(i)+D_F(i))/(sca(i)%density*(1-sca(i)%porosity))
@@ -223,9 +225,9 @@ module sed_hillslopeRouting
                                       (1-F(i)%s_east)*discharge_edge(i)%east   -&
                                       (1-F(i)%s_west)*discharge_edge(i)%west)
 
-                    numeTerm2 = - B*(theta*(F(i)%s_south*F(i)%south-F(i)%s_north*F(i)%north)  &
+                    numeTerm2 = -B*(theta*(F(i)%s_south*F(i)%south-F(i)%s_north*F(i)%north)  &
                                 +   (1-theta)*(FB(i)%s_south*FB(i)%south-FB(i)%s_north*FB(i)%north))
-                    numeTerm3 = - B*(theta*(F(i)%s_east*F(i)%east-F(i)%s_west*F(i)%west)  &
+                    numeTerm3 = -B*(theta*(F(i)%s_east*F(i)%east-F(i)%s_west*F(i)%west)  &
                                 +   (1-theta)*(FB(i)%s_east*FB(i)%east-FB(i)%s_west*FB(i)%west))
                     do j = 1, nsedpar
                         numeTerm1 = (ofhB(i)%depth*1.e-3*csaB(i)%C(j)-csa(i)%Dz*(1-sca(i)%porosity))
@@ -348,4 +350,3 @@ module sed_hillslopeRouting
 
 
 end module sed_hillslopeRouting
-

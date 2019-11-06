@@ -201,41 +201,45 @@ module sed_overlandFlowTransCapa
     !                waterDepth_east = (waterDepth(i) + waterDepth(cn(i)%east))/2
     !                waterSslope_east = (waterSslope(i) + waterSslope(cn(i)%east))/2
     !                flowVelocity_east = (flowVelocity(i) + flowVelocity(cn(i)%east))/2
-                    G_out(i)%east = overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
+                    G_out(i)%east = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
                                                     sca(i)%diameter/1000., &
                                                     gravi, flowVelocity_edge(i)%east, &
                                                     waterDepth_edge(i)%east/1000., &
-                                                    waterSslope_edge(i)%east, ofh(i)%width,vis)
+                                                    waterSslope_edge(i)%east, ofh(i)%width,vis), &
+                                                    FPCRIT*discharge_edge(i)%east)
                 end if
                 if (cn(i)%north>i) then
     !                waterDepth_north = (waterDepth(i) + waterDepth(cn(i)%north))/2
     !                waterSslope_north = (waterSslope(i) + waterSslope(cn(i)%north))/2
     !                flowVelocity_north = (flowVelocity(i) + flowVelocity(cn(i)%north))/2
-                    G_out(i)%north = overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
+                    G_out(i)%north = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
                                                     sca(i)%diameter/1000., &
                                                     gravi, flowVelocity_edge(i)%north, &
                                                     waterDepth_edge(i)%north/1000., &
-                                                    waterSslope_edge(i)%north, ofh(i)%width,vis)
+                                                    waterSslope_edge(i)%north, ofh(i)%width,vis),&
+                                                    FPCRIT*discharge_edge(i)%north)
                 end if
                 if (cn(i)%west>i) then
     !                waterDepth_west = (waterDepth(i) + waterDepth(cn(i)%west))/2
     !                waterSslope_west = (waterSslope(i) + waterSslope(cn(i)%west))/2
     !                flowVelocity_west = (flowVelocity(i) + flowVelocity(cn(i)%west))/2
-                    G_out(i)%west = overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
+                    G_out(i)%west = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
                                                     sca(i)%diameter/1000., &
                                                     gravi, flowVelocity_edge(i)%west, &
                                                     waterDepth_edge(i)%west/1000., &
-                                                    waterSslope_edge(i)%west, ofh(i)%width,vis)
+                                                    waterSslope_edge(i)%west, ofh(i)%width,vis), &
+                                                    FPCRIT*discharge_edge(i)%west)
                 end if
                 if (cn(i)%south>i) then
     !                waterDepth_south = (waterDepth(i) + waterDepth(cn(i)%south))/2
     !                waterSslope_south = (waterSslope(i) + waterSslope(cn(i)%south))/2
     !                flowVelocity_south = (flowVelocity(i) + flowVelocity(cn(i)%south))/2
-                    G_out(i)%south = overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
+                    G_out(i)%south = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
                                                     sca(i)%diameter/1000., &
                                                     gravi, flowVelocity_edge(i)%south, &
                                                     waterDepth_edge(i)%south/1000., &
-                                                    waterSslope_edge(i)%south, ofh(i)%width,vis)
+                                                    waterSslope_edge(i)%south, ofh(i)%width,vis), &
+                                                    FPCRIT*discharge_edge(i)%south)
                 end if
 
                 !if i is not nextV
@@ -244,7 +248,10 @@ module sed_overlandFlowTransCapa
                 !next(ipos,jpos)
             end do
 
+
         end subroutine overlandFlowTransCapa_outCell
+
+
 
 
     !    subroutine overlandFlowTransCapaCell()

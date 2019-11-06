@@ -93,6 +93,8 @@ module sed_config
             allocate(csa(NA), csaB(NA))
             !allocate(csaB%C(NA), csaB%pot_Dz(NA), csaB%ava_Dz(NA))
 
+            allocate(cmb(NA), cmb_h(NA))
+
             allocate(ion(NA), isrr(NA), isrrB(NA))
             allocate(isrn(NA))
             !allocate(bke)
@@ -148,7 +150,7 @@ module sed_config
                         !print *, 'den ', i, gca(i)%soilType, sca(i)%density
                         sca(i)%porosity = sa(gca(i)%soilType)%porosity
                         sca(i)%soilDetach       = sa(gca(i)%soilType)%soilDetach
-                        !sca(i)%overlandDetach   = sa(gca(i)%soilType)%overlandDetach
+                        sca(i)%overlandDetach   = sa(gca(i)%soilType)%overlandDetach
 
                         ! For river bank soil characteristics
                         bsca(i)%frac = sa(cba(i)%soilTypeBank)%frac
@@ -183,6 +185,7 @@ module sed_config
                         ! For channel-bed soil characteristics
                         cbsca(i)%density = sa(cba(i)%soilTypeBed)%density
                         cbsca(i)%porosity = sa(cba(i)%soilTypeBed)%porosity
+                        cbsca(i)%frac = sa(cba(i)%soilTypeBed)%frac !> Introduced new lam 13-Sep-2019
 
 
                     !end if
@@ -224,7 +227,7 @@ module sed_config
 
             ! Hydro variables at the edge
             waterDepthB_edge = waterDepth_edge
-            waterSslopeB_edge = waterDepth_edge
+            waterSslopeB_edge = waterSslope_edge
             flowVelocityB_edge = flowVelocity_edge
             dischargeB_edge = discharge_edge
 
@@ -287,6 +290,7 @@ module sed_config
         !> the initial sediment concentration, the initial depth of loose soil,
         !> the initial thickness of active and parent bed layers and their sediment
         !> class composition.
+        !> Initialize the average variables at the cell cell edges
         !>
         !> @author Luis Morales (LAM), GIWS & GWF.
         !> - July, 2017
@@ -337,10 +341,45 @@ module sed_config
                 !    isrn(i)%SD(k) = cbsca(i)%frac(k)*cba(i)%iniThickBed
                 !end do
 
+                !> Set initial concentration. Mass balance approach in kg/m3
+                cmb(i)%C(:) = 0.1
+
             end do
+
+            ! Set initial potential changes of land Surface
+            csa(:)%pot_Dz = 0.
 
             ! Set fraction diameters
             call setFracDiame()
+
+            ! Set initial conditions for overland flow hydraulic variables
+             ofh(:)%discharge = 0.; ofh(:)%depth = 0.; ofh(:)%slope = 0.; &
+             ofh(:)%velocity = 0.; ofh(:)%width = 0.
+
+            ! Set initial conditions for in-stream flow hydraulic variables
+
+
+            ! Initialize the average variables at the cell cell edges
+            waterDepth_edge(:)%east = 0.; waterDepth_edge(:)%north = 0.; &
+            waterDepth_edge(:)%west = 0.; waterDepth_edge(:)%south = 0.
+            waterSslope_edge(:)%east =0.; waterSslope_edge(:)%north = 0.; &
+            waterSslope_edge(:)%west =0.; waterSslope_edge(:)%south =0.
+            flowVelocity_edge(:)%east =0.; flowVelocity_edge(:)%north = 0.; &
+            flowVelocity_edge(:)%west =0.; flowVelocity_edge(:)%south =0.
+            discharge_edge(:)%east =0.; discharge_edge(:)%north = 0.; &
+            discharge_edge(:)%west =0.; discharge_edge(:)%south =0.
+
+            !> Set the waterbody type and constant attributes for reach hydraulics
+            rh(:)%wbody = 0
+            do i = 1, NRESE
+                rh(rese(i)%rank)%wbody = 1
+                rh(rese(i)%rank)%areaRe = rese(i)%area
+                rh(rese(i)%rank)%volRe = rese(i)%vol
+                rh(rese(i)%rank)%depth = rese(i)%vol/rese(i)%area
+            end do
+
+
+
 
         end subroutine sed_initial_conditions
 
@@ -409,6 +448,8 @@ module sed_config
                 end if
 
             end do
+            !print *,NA, cn(324)%east, cn(324)%north, cn(324)%west, cn(324)%south
+            !stop
 
         end subroutine sed_config_init
 

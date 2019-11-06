@@ -4,7 +4,7 @@ module sed_overlandFlowDetachment
 
     contains
 
-        function flowShearStress(rho, gravi, h, S)
+        real function flowShearStress(rho, gravi, h, S)
         ! Flow shear stresses (N/m^2)
         ! Input:
         ! - rho: Water density (kg/m^3)
@@ -16,13 +16,12 @@ module sed_overlandFlowDetachment
             implicit none
 
             real, intent(in) :: rho, gravi, h, S
-            real :: flowShearStress
 
             flowShearStress = rho*gravi*h*S
 
         end function flowShearStress
 
-        function shearVelocity(rho, gravi, h, S)
+        real function shearVelocity(rho, gravi, h, S)
         ! Shear velocity (m/s)
         ! Input:
         ! - rho: Water density (kg/m^3)
@@ -34,7 +33,7 @@ module sed_overlandFlowDetachment
             implicit none
 
             real, intent(in) :: rho, gravi, h, S
-            real :: shearVelocity, tau
+            real :: tau
 
             ! Flow shear stresses
             tau = flowShearStress(rho, gravi, h, S)
@@ -44,7 +43,7 @@ module sed_overlandFlowDetachment
 
         end function shearVelocity
 
-        function critDimenShearStress(rho, gravi, h, S, D, v)
+        real function critDimenShearStress(rho, gravi, h, S, D, v)
         ! Critical dimensionless shear stresses
         ! Input:
         ! - rho: Water density (kg/m^3)
@@ -58,7 +57,7 @@ module sed_overlandFlowDetachment
             implicit none
 
             real, intent(in) :: rho, gravi, h, S, D, v
-            real :: critDimenShearStress, Vs, Rey, a, b
+            real ::  Vs, Rey, a, b
 
             ! Shear velocity (m/s)
             Vs = shearVelocity(rho, gravi, h, S)
@@ -82,11 +81,12 @@ module sed_overlandFlowDetachment
             else
                 a = 0.10; b = -0.30
             end if
+            !print *, 'Rey:', Rey, a , b
             critDimenShearStress = a*(Rey**b)
 
         end function critDimenShearStress
 
-        function critShearStress(rho, gravi, h, S, D, v, rhos)
+        real function critShearStress(rho, gravi, h, S, D, v, rhos)
         ! Critical shear stresses for erosion (N/m^2)
         ! Input:
         ! - rho: Water density (kg/m^3)
@@ -101,16 +101,17 @@ module sed_overlandFlowDetachment
             implicit none
 
             real, intent(in) :: rho, gravi, h, S, D, v, rhos
-            real :: critShearStress, Fc
+            real :: Fc
 
             Fc = critDimenShearStress(rho, gravi, h, S, D, v)
+            !print *, 'FC :', Fc, rhos, rho, gravi, D
 
             ! Critical shear stress
             critShearStress = Fc*(rhos - rho)*gravi*D
 
         end function critShearStress
 
-        function overlandFlowDetachment(rho, gravi, h, S, D, v, rhos, K_F)
+        real function overlandFlowDetachment(rho, gravi, h, S, D, v, rhos, K_F)
         ! Overland flow detachment (kg m^-2 s^-1)
         ! Input:
         ! - rho: Water density (kg/m^3)
@@ -126,7 +127,7 @@ module sed_overlandFlowDetachment
             implicit none
 
             real, intent(in) :: rho, gravi, h, S, D, v, rhos, K_F
-            real :: overlandFlowDetachment, tau, tau_c
+            real :: tau, tau_c
 
             ! Flow shear stresses
             tau = flowShearStress(rho, gravi, h, S)
@@ -165,7 +166,7 @@ module sed_overlandFlowDetachment
 
                         D_F(i) = overlandFlowDetachment(rhow, gravi, ofh(i)%depth/1000.,&
                                     ofh(i)%slope, sca(i)%diameter/1000., vis, sca(i)%density, &
-                                    sca(i)%overlandDetach)
+                                    sca(i)%overlandDetach*1.e-6)
                     !else
                     !    D_F(i,j) = -9999.9
                     !end if

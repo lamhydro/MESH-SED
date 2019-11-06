@@ -187,6 +187,7 @@ module sed_rainDropDetachment
             if (d == 0.) then
                 M_D = 0.
             else
+                !print *, d, drip, draina, rho, pi, X, gravi
                 M_D = sqrMomLeafDrip(d, drip, draina, rho, pi, X, gravi)
             end if
             !if (isnan(M_D)) stop '"M_D" is a NaN'
@@ -194,6 +195,10 @@ module sed_rainDropDetachment
             Fw = waterDepthCorrFact(I, h, d)
             !if (isnan(Fw)) stop '"Fw" is a NaN'
             rainDropDetach = K_R*Fw*(1 - C_G)*( (1 - C_C)*M_R + M_D )
+            !if (rainDropDetach<0.) then
+            !  print*, rainDropDetach, K_R, Fw, C_G, C_C, M_R, M_D
+            !  stop 'rainDropDetach < 0'
+            !end if
 
 
         end function rainDropDetach
@@ -213,6 +218,7 @@ module sed_rainDropDetachment
 
             !allocate(D_R(yCount,xCount))
             !allocate(D_R(NA))
+            !D_R(:) = 0.0 ! Initilizing the array. LAM 3May19
 
             do i = 1, NA
             !do i = 1,yCount

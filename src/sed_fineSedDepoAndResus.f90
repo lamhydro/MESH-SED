@@ -15,7 +15,7 @@ module sed_fineSedDepoAndResus
             implicit none
             real, intent(in) :: D, g, v, rhos, rho
 
-            sedSettlVelo = ((D**2)*g/(18*v))*(rhos/rho - 1)
+            sedSettlVelo = ((D**2)*g/(18*v))*((rhos/rho) - 1)
 
         end function sedSettlVelo
 

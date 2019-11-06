@@ -80,6 +80,8 @@ module sed_chanBankErosion
             implicit none
             real, intent(in) :: rho, gravi, h, S, B
 
+            !print *, flowShearStress(rho, gravi, h, S)
+
             bankFlowShearStress = K(B,h)*flowShearStress(rho, gravi, h, S)
 
         end function bankFlowShearStress
@@ -117,11 +119,17 @@ module sed_chanBankErosion
             tau_b = bankFlowShearStress(rho, gravi, h, S, B)
             tau_bc = critShearStress(rho, gravi, h, S, D, v, rhos)
 
+            !print *, tau_b, tau_bc, rho, gravi, h, S, D, v, rhos
+
+
             if (tau_b > tau_bc) then
                 bankRateErosion = Kb * (tau_b/tau_bc - 1)
             else
                 bankRateErosion = 0.
             end if
+            !print *, 'bankRateErosion: ', bankRateErosion
+
+            !stop
 
         end function bankRateErosion
 
@@ -148,7 +156,7 @@ module sed_chanBankErosion
             !> Loop for cell channels
             do i = 1, NA
                 Eb = 2*bankRateErosion(bsca(i)%chanBankDetach, rhow, gravi, &
-                                    rh(i)%depth, rh(i)%slope, bsca(i)%diameter, &
+                                    rh(i)%depth, rh(i)%slope, bsca(i)%diameter*1e-3, &
                                     vis, bsca(i)%density, rh(i)%width)
                 Eb = Eb * rh(i)%depth/bsca(i)%density
                 !> Loop for each sediment particle size
@@ -159,6 +167,8 @@ module sed_chanBankErosion
 
 
         end subroutine grid_bankErosion
+
+
 
 
 

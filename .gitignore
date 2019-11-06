@@ -8,3 +8,4 @@ test/
 !test/MESH_sed_param.ini
 !test/MESH_sed_gridCell.ini
 !test/MESH_sed_soilVegChan.ini
+github.sh

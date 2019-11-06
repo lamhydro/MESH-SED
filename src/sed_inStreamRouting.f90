@@ -174,6 +174,18 @@ module sed_inStreamRouting
         end function frac_fi
 
 
+        !> Hydraulic load or transit time in a reservoir (m/s)
+        !> A: Reservoir surface area (m2)
+        !> Q: Reservoir inflow (m^3/s)
+        real function reserVel(A, Q)
+            implicit none
+            real, intent(in) :: A, Q
+            reserVel = Q/A
+        end function reserVel
+
+
+
+
 
         subroutine inStreamRouting
             use sed_vars
