@@ -1,0 +1,63 @@
+# ======================================================================
+#
+#				Include or header file for SA_MESH_SED makefile
+#
+# ======================================================================
+
+# ======================================================================
+# Directory of source code
+# ======================================================================
+
+# Update the DIR_REPO variable as appropriate.
+# For Cygwin:
+#DIR_REPO=/cygdrive/c/sample_path
+
+# For MinGW:
+#DIR_REPO=C:\sample_path
+
+# For Linux:
+#DIR_REPO=/home/sample_path
+
+# To build from the current directory:
+DIR_REPO=.
+
+
+# ======================================================================
+# Include the following directories in the source file searching path
+# ======================================================================
+#VPATH=$(DIR_REPO)/src:
+VPATH=.:
+
+# ======================================================================
+# Object files needed to build SA_MESH
+# ======================================================================
+
+#Input files
+OBJECTS=	sed_vars.o \
+			sed_tools.o \
+			sed_config.o \
+			sed_input.o \
+			sed_output.o
+
+#Modules
+OBJECTS+=	sed_rainDropDetachment.o \
+			sed_overlandFlowDetachment.o \
+			sed_overlandFlowTransCapa.o \
+			sed_hillslopeRouting.o \
+			sed_fineSedDepoAndResus.o \
+			sed_inStreamTransCapa.o \
+			sed_inStreamRouting.o \
+			sed_chanBankErosion.o \
+			sed_massBalance.o
+
+
+
+
+#Output files
+#OBJECTS+=	read_config_output.o \
+#			write_output.o write_output_r2c.o write_output_seq.o
+#OBJECTS+=	WRITE_R2C_HEADER.o write_r2c.o \
+#			save_basin_output.o
+
+#MESH Driver
+OBJECTS+=	mesh_sed.o
