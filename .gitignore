@@ -1,5 +1,5 @@
-*.mod
-*.o
+src/*.mod
+src/*.o
 deprecate/
 doc/*
 !doc/uman.pdf
