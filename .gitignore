@@ -3,6 +3,7 @@ src/*.o
 deprecate/
 doc/*
 !doc/uman.pdf
+!doc/uman.tex
 out
 test/
 !test/MESH_sed_param.ini

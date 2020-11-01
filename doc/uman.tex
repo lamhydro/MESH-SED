@@ -1,0 +1,601 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage[utf8]{inputenc}
+
+\newcommand{\ms}{\textbf{MESH-SED} }
+\newcommand\verbb[1]{\textcolor[rgb]{0,0,1}{#1}}
+
+\usepackage{graphicx}
+%\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{multicol}
+% redefine \VerbatimInput
+\RecustomVerbatimCommand{\VerbatimInput}{VerbatimInput}% 
+{fontsize=\tiny,
+ %
+ frame=lines,  % top and bottom rule only
+ framesep=0.2em, % separation between frame and text
+ rulecolor=\color{gray},
+ %
+ label=\fbox{\color{black}Example},
+ labelposition=topline,
+ %
+ commandchars=\|\(\), % escape character and argument delimiters for
+                      % commands within the verbatim
+ commentchar=*        % comment character
+}
+\usepackage{multirow}
+\usepackage{minibox}
+\usepackage{enumitem}
+\setenumerate[1]{label=\arabic*.}
+\newcounter{ResumeEnumerate}
+%\setitemize{label=\usebeamerfont*{itemize item}%
+%  \usebeamercolor[fg]{itemize item}
+%  \usebeamertemplate{itemize item}}
+\usepackage{epstopdf}
+\usepackage{thmtools}
+\graphicspath{{figures/}} % Directory in which figures are stored
+
+\begin{document}
+
+\begin{titlepage}
+%\title{MESH-SED v1.0: A sediment transport for cold region catchments}
+%\author{Luis A. Morales-Mar\'{i}n}
+%\institute[GIWS]{Global Institute for Water Security (GIWS)}
+%\date{\today}
+
+    \begin{center}
+        \vspace*{1cm}
+
+        \Huge
+        \textbf{SEDI}
+
+        \vspace{0.5cm}
+        \LARGE
+        Version 1.0
+
+        \vspace{1.5cm}
+
+        \textbf{Luis Morales-Mar\'{i}n}
+
+        \vfill
+
+        A sediment transport model for large-scale basins in cold regions.
+
+        \vspace{0.8cm}
+
+        %\includegraphics[width=0.4\textwidth]{university}
+
+        \Large
+        Global Institute for Water Security (GIWS)\\
+        University of Saskatchewan\\
+        Canada\\
+        \date{\today}
+
+    \end{center}
+\end{titlepage}
+
+\begin{tableofcontents}
+\tableofcontents
+\end{tableofcontents}
+
+\section{Introduction}
+\begin{itemize}
+  \item Solutes are transported across the catchment via surface runoff and groundwater flow.
+  \item Nitrogen (N) and phosphorus are abundant nutrient especially in agricultural areas.
+  \item Nutrients can cause eutrophication and water quality deterioration. Pollutants can also deteriorate the water quality.
+  \item Sediments can be considered as proxies of solutes.
+\end{itemize}
+
+\subsection{Sediment transport processes}
+\begin{itemize}
+\item Overland and in-stream erosion and deposition.
+\item Soil leaching of sediments.
+\item Atmospheric deposition
+\item In cold region:
+\begin{itemize}
+\item Soil freeze-thaw cycles enhance rock weathering and soil leaching
+\item Frozen soil-enhance runoff and erosion in surface layer
+\end{itemize}
+\end{itemize}
+\begin{figure}
+\includegraphics[width = \textwidth]{sedTrans}
+\end{figure}
+
+\section{Controls and boundary conditions}
+Controls in overland and groundwater transport.
+\begin{itemize}
+\item Slope, land type, soil type (diameter, resistance, specific weight, etc)
+\item Rainfall, air temperature, soil water content, soil conductivity 
+\end{itemize}
+
+Controls in in-stream transport:
+\begin{itemize}
+\item Channel slope and section geometry
+\item Bank and bottom material properties (diameter, resistance, specific weight), discharge, shear stress (function of slope and discharge) and 
+\end{itemize}
+
+\subsection{System representation of solute transport}
+  \begin{figure}
+    \centering
+    \includegraphics[width = \textwidth]{rainfall_sediment_trasnport}
+    %\caption{Awesome figure}
+  \end{figure}
+
+\section{Model structure}
+Some \ms features:
+\begin{itemize}
+\item loosely coupled with MESH \cite{pietroniro2006using}.
+\item physically-based watershed sediment transport model.
+\item developed based on SHETRAN \cite{ewen2000shetran} and SHESED \cite{wicks1996shesed}.
+\item semi-distributed model that work on a orthogonal grid (MESH grid). 
+\item suitable for large-scale catchment to run on a continuous basis.
+\item include different sediment classes.
+\item future work: sedimentation in reservoirs, code parallelization. 
+\end{itemize}
+\begin{figure}
+\includegraphics[width =0.6\textwidth]{programFlowDia2}
+%\caption{lion!!}
+\end{figure}
+
+\subsection{Source code structure}
+Program \texttt{mesh\_sed.f90}: Before main loop 
+\begin{footnotesize}
+\begin{verbatim}[commandchars=\\\{\}]
+    \verbb{Read the study case name}
+    call mesh_sed_case
+    !> Read 'MESH_sed_param.ini'
+    call read_sed_param
+    !> Read 'MESH_drainage_database.r2c'
+    call read_MESH_drainage_database
+    !> Allocate memory space of important variables
+    call sed_allocate_var
+    !> Get (i,j) position of RANK cells and neighbor cells.
+    call sed_config_init
+    !> Read 'MESH_sed_gridCell.ini'
+    call read_sed_gridCell
+    !> Read 'MESH_sed_soilVegChan.ini'
+    call read_sed_soilVegChan
+    !> Read 'MESH_sed_reservoir.ini'
+    call read_sed_reservoir
+\end{verbatim}
+\end{footnotesize}
+
+
+\section{Input data}
+\subsection{\ms input/output structure}
+\begin{figure}
+\includegraphics[width =0.9\textwidth]{inOutFiles}
+%\caption{lion!!}
+\end{figure}
+
+\subsection{Static input data}
+\subsubsection{MESH drainage database data}
+The information regarding catchment topology, cells connectivity, and model 'skeleton' is contained in \texttt{MESH\_drainage\_database.r2c}. This file is an input file for MESH and it is usually produced by Green Kenue.
+
+In \ms, \texttt{MESH\_drainage\_database.r2c} is read at the beginning of the model.
+
+\subsubsection{Sediment transport model data}
+The following input files are read at the beginning of the program. 
+\begin{itemize}
+\item \texttt{MESH\_sed\_param.ini}: Contains general information require to run de model.
+\item \texttt{MESH\_sed\_soilVegChan.ini}: Contains the soil and vegetation type characteristics.
+\item \texttt{MESH\_sed\_gridCell.ini}: Soil, vegetation and cover information for every cell of the grid.
+\end{itemize}
+
+\subsubsection{\texttt{MESH\_sed\_param.ini}}
+{\tiny
+\begin{enumerate}[label=Line \arabic*]\itemsep0em 
+\item Comment
+\item MESH study case directory path
+\item Comment
+\item Hillslope\_time\_weighting\_factor	in-stream\_time\_weighting\_factor	in-stream\_space\_weighting\_factor
+\item Comment
+\item Hillslope transport capacity method: 1[Yalin, 1963]\cite{yalin1963expression} 2[Engelund-Hansen, 1967]\cite{engelund1967monograph}
+\item Comment
+\item In-stream transport capacity method: 1[Engelund-Hansen, 1967]\cite{engelund1967monograph}, 2[Ackers and White, 1973]\cite{ackers1973sediment}, 3[Day, 1980]\cite{}
+\item Comment
+\item Simulation time step (sec). It must be a multiple or factor of 60s but $\le 3600 s = 1 h$.
+\item Comment
+\item Comment
+\item Start time: year julian\_day hour minutes seconds
+\item End time: year julian\_day hour minutes seconds
+\item Comment
+\item Upper limit of volumetric suspended sediment concentration
+\item Comment
+\item Output directory
+\item Comment
+\item Number of output grid points (ngr)
+\item Comment
+\item Comment
+\item 
+%\begin{minipage}[t]{0.1\linewidth}\\[-2.7em]
+\parbox{\textwidth}{
+%\begin{flushright}
+%$$
+$\text{cell\_number}_1 \quad \text{variable}_1 \quad \text{particle\_class}_1$ \newline
+$\quad \vdots \quad\quad\quad\quad\quad\quad\quad  \vdots \quad\quad\quad\quad\quad\quad \vdots$ \newline
+$\text{cell\_number}_{ngr} \quad \text{variable}_{ngr} \quad \text{particle\_class}_{ngr} $
+
+%$$
+%\end{flushright}
+%\end{minipage}
+}
+where $cell\_number$ is equal to $rank$ in \texttt{MESH\_drainage\_database.r2c}, $variable$ can be $conce$ (concentration) or $load$ and $particle_class$ is listed in Table~\ref{sedClass}.
+\end{enumerate}
+}
+
+\subsubsection{\texttt{MESH\_sed\_param.ini}}
+{\tiny
+\begin{enumerate}[start=\numexpr\value{ResumeEnumerate}+1, label=Line \arabic*]\itemsep0em 
+\item Comment
+\item Number of output fields (gridded data)
+\item Comment
+\item Comment
+\parbox{\textwidth}{
+$\text{variable}_1 \quad \text{particle\_class}_1$ \newline
+$\vdots \quad\quad\quad\quad\quad\quad \vdots$ \newline
+$\text{variable}_{ngr} \quad \text{particle\_class}_{ngr} $
+}
+\end{enumerate}
+}
+
+\begin{table}[ht]
+\centering
+\caption{Sediment/soil particles classes and diameters \cite{Wentworth1922}}
+\label{sedClass}
+\begin{tabular}{lllc}
+\hline
+\multicolumn{3}{c}{\color{red}{particle\_class}}  & $\phi$ range (mm) \\
+\hline
+Mud & 1 & clay     		& $0.00006 \leq \phi > 0.0039$     \\ \hline
+\multirow{4}{*}{Silt} & 2 & veryFineSilt     & $0.0039 \leq \phi > 0.0078$     \\
+& 3 & fineSilt			& $0.0078 \leq \phi > 0.0156$     \\
+& 4 & mediumSilt		& $0.0156 \leq \phi > 0.0313$     \\
+& 5 & coarseSilt		& $0.0313 \leq \phi > 0.0625$     \\ \hline
+\multirow{5}{*}{Sand} & 6 & veryFineSand		& $0.0625 \leq \phi > 0.125$     \\
+& 7 & fineSand			& $0.125 \leq \phi > 0.25$     \\
+& 8 & mediumSand		& $0.25 \leq \phi > 0.5$     \\
+& 9 & coarseSand		& $0.5 \leq \phi > 1.0$     \\
+& 10 & veryCoarseSand	& $1.0 \leq \phi > 2.0$     \\ \hline
+\multirow{4}{*}{Gravel} & 11 &  granule			& $2.0 \leq \phi > 4.0$     \\
+& 12 & pebble			& $4.0 \leq \phi > 64.0$     \\
+& 13 & cobble			& $64.0 \leq \phi > 256.0$     \\
+& 14 & boulder			& $256.0 \leq \phi > 4096.0$  \\
+\hline
+\end{tabular}
+\end{table}
+
+
+
+\VerbatimInput{../test/MESH_sed_param.ini}
+
+
+\subsubsection{\texttt{MESH\_sed\_soilVegChan.ini}}
+{\tiny
+\begin{enumerate}[label=Line \arabic*]\itemsep0em 
+\item Comment
+\item Number of soil types (ns)
+\item For each soil type $i$
+\parbox{\textwidth}{
+
+$\text{frac}_1^1 \quad\hdots\quad \text{frac}_j^1 \quad\hdots\quad \text{frac}_{14}^1$ \newline
+$\rho_s^1 \quad \lambda^1 \quad k_R^1 \quad k_F^1 \quad k_b^1$ \newline
+$\vdots \quad\quad \vdots \quad\quad \vdots$ \newline
+$\text{frac}_1^i \quad\hdots\quad \text{frac}_j^i \quad\hdots\quad \text{frac}_{14}^i$ \newline
+$\rho_s^i \quad \lambda^i \quad k_R^i \quad k_F^i \quad k_b^i$ \newline
+$\vdots \quad\quad \vdots \quad\quad \vdots$ \newline
+$\text{frac}_1^{ns} \quad\hdots\quad \text{frac}_j^{ns} \quad\hdots\quad \text{frac}_{14}^{ns}$ \newline
+$\rho_s^{ns} \quad \lambda^{ns} \quad k_R^{ns} \quad k_F^{ns} \quad k_b^{ns}$
+%\]
+}
+\item Comment
+\item Number of vegetation classes (nv)
+\item For each vegetation type $j$
+\parbox{\textwidth}{
+\[
+\begin{matrix} 
+\text{vege}_1 & \hdots & \text{vege}_j & \hdots & \text{vege}_{nv} \\
+X_1 & \hdots & X_j & \hdots & X_{nv} \\
+d_1 & \hdots & d_j & \hdots & d_{nv} \\
+\text{DRIP}_1 & \hdots & \text{DRIP}_j & \hdots & \text{DRIP}_{nv}
+\end{matrix}
+\]
+}
+\item Comment
+\item $\beta \quad \delta_{max} \quad \alpha$
+\end{enumerate}
+}
+{\tiny
+\begin{itemize}[label={}]
+\item frac = Fraction occupied for each particle class.
+\item $\rho_s$ =  Soil density (kg m$^{-3}$).
+\item $\lambda$ = Soil surface porosity ($0. \leq \lambda \leq 1.$).
+\item $k_R$ = Soil detachability  (J$^{-1}$).
+\item $k_F$ = Overland flow detachment (mg m$^{-2}$ s$^{-1}$).
+\item $k_b$ = Channel bank flow detachment (mg m$^{-2}$ s$^{-1}$).
+\item vege = Vegetation class.
+\item $X$ =  Fall height (m).
+\item $d$ = Leaf drip diameter (mm).
+\item DRIP = \% drainage as leaf drip.
+\item $\beta$ = Threshold sediment concentration in channels for infiltration and overbank sediment flow.
+\item $\delta_{max}$ = Maximun thickness (m) of top (active) bed sediment layer in channel. $\delta_{max} = $ 1 or 2 D$_99$ for gravel-bed channels and $\delta_{max} = 10$ mm for sand-bed channels.
+\item $\alpha$ = Ratio of critical shear stresses for deposition and initiation of motion ($\alpha < 1$). Likely range 0.25-0.75.
+\end{itemize}
+}
+
+\VerbatimInput{../test/MESH_sed_soilVegChan.ini}
+%\setcounter{ResumeEnumerate}{\value{enumi}}
+
+\subsubsection{\texttt{MESH\_sed\_gridCell.ini}}
+{\tiny
+\begin{enumerate}[label=Line \arabic*]\itemsep0em 
+\item Comment
+\item Initial depth of loose soil\\[-2.7em]
+\begin{minipage}[t]{0.1\linewidth}
+%\begin{flushright}
+$$
+\begin{matrix} 
+\delta_{11} & \delta_{12} & \cdots & \delta_{1n} \\
+\delta_{21} & \delta_{22} & \cdots & \delta_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+\delta_{m1} & \delta_{m2} & \cdots & \delta_{mn} \\
+\end{matrix}
+$$
+%\end{flushright}
+\end{minipage}
+%}
+\item Comment
+\item Ground cover\\[-2.7em]
+\begin{minipage}[t]{0.1\linewidth}
+\begin{flushright}
+$$
+\begin{matrix} 
+G_{11} & G_{12} & \cdots & G_{1n} \\
+G_{21} & G_{22} & \cdots & G_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+G_{m1} & G_{m2} & \cdots & G_{mn}\\
+\end{matrix}
+$$
+\end{flushright}
+\end{minipage}
+%}
+\item Comment
+\item Hillslope soil type\\[-2.7em]
+\begin{minipage}[t]{0.1\linewidth}
+\begin{flushright}
+$$
+\begin{matrix} 
+hst_{11} & hst_{12} & \cdots & hst_{1n} \\
+hst_{21} & hst_{22} & \cdots & hst_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+hst_{m1} & hst_{m2} & \cdots & hst_{mn}\\
+\end{matrix}
+$$
+\end{flushright}
+\end{minipage}
+%}
+\item Comment
+\item Steady-state sediment flux boundary conditions\\[-2.7em]
+\begin{minipage}[t]{0.1\linewidth}
+\begin{flushright}
+$$
+\begin{matrix} 
+bc_{11} & bc_{12} & \cdots & bc_{1n} \\
+st_{21} & bc_{22} & \cdots & bc_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+bc_{m1} & bc_{m2} & \cdots & bc_{mn}\\
+\end{matrix}
+$$
+\end{flushright}
+\end{minipage}
+%}
+\item Comment
+\end{enumerate}
+\setcounter{ResumeEnumerate}{\value{enumi}}
+}
+{\scriptsize 
+\begin{itemize}[label={}]
+\item $m$ = Number of rows (latitudes coordinates) of the MESH grid.
+\item $n$ = Number of columns (longitudes coordinates) of the MESH grid.
+\item $\delta$ = Initial depth of hillslope loose soil (m) at each cell.
+\item $G$ =  Proportion [$0\leq G \leq 1$] of impervious area in the cell.
+\item $hst$ =  Index ($hst = 1 ... ns$) of the predominant hillslope soil type at each cell.
+\item Steady-state sediment flux boundary conditions at each cell . 
+\end{itemize}
+Note: \ms can be modified to introduce dynamically time-dependant $G$ and $bc$ fields.
+}
+
+\subsubsection{\texttt{MESH\_sed\_gridCell.ini}}
+{\tiny
+\begin{enumerate}[start=\numexpr\value{ResumeEnumerate}+1, label=Line \arabic*]\itemsep0em 
+\item Predominant vegetation type\\[-2.7em]
+\begin{minipage}[t]{0.1\linewidth}
+\begin{flushright}
+$$
+\begin{matrix} 
+vt_{11} & vt_{12} & \cdots & vt_{1n} \\
+vt_{21} & bc_{22} & \cdots & vt_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+vt_{m1} & vt_{m2} & \cdots & vt_{mn}\\
+\end{matrix}
+$$
+\end{flushright}
+\end{minipage}
+%}
+\item Comment
+\item Canopy cover\\[-2.7em]
+\begin{minipage}[t]{0.1\linewidth}
+\begin{flushright}
+$$
+\begin{matrix} 
+C_{11} & C_{12} & \cdots & C_{1n} \\
+C_{21} & C_{22} & \cdots & C_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+C_{m1} & C_{m2} & \cdots & C_{mn}\\
+\end{matrix}
+$$
+\end{flushright}
+\end{minipage}
+%}
+\item Comment
+\item Channel soil type\\[-2.7em]
+\begin{minipage}[t]{0.1\linewidth}
+\begin{flushright}
+$$
+\begin{matrix} 
+cst_{11} & cst_{12} & \cdots & cst_{1n} \\
+cst_{21} & cst_{22} & \cdots & cst_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+cst_{m1} & cst_{m2} & \cdots & cst_{mn}\\
+\end{matrix}
+$$
+\end{flushright}
+\end{minipage}
+%}
+\item Comment
+\end{enumerate}
+%\setcounter{ResumeEnumerate}{\value{enumi}}
+}
+{\scriptsize 
+\begin{itemize}[label={}]
+\item $vt$ = Predominant vegetation class at each cell (see $vege$)
+\item $C$ = Proportion [$0\leq G \leq 1$] of the cell area covered by vegetation (canopy) at each cell. 
+\item $cst$ = Index ($hst = 1 ... ns$) of the predominant channel bed soil type at each cell.
+\end{itemize}
+Note: \ms can be modified to introduce dynamically time-dependent $vt$ and $C$ fields
+}
+
+\subsubsection{\texttt{MESH\_sed\_gridCell.ini}}
+{\tiny
+\begin{enumerate}[start=\numexpr\value{ResumeEnumerate}+1, label=Line \arabic*]\itemsep0em 
+\item Channel bank soil type\\[-2.7em]
+\begin{minipage}[t]{0.1\linewidth}
+\begin{flushright}
+$$
+\begin{matrix} 
+cbst_{11} & cbst_{12} & \cdots & cbst_{1n} \\
+cbst_{21} & cbst_{22} & \cdots & cbst_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+cbst_{m1} & cbst_{m2} & \cdots & cbst_{mn}\\
+\end{matrix}
+$$
+\end{flushright}
+\end{minipage}
+%}
+
+\item Comment
+\item Initial thickness of channel bed material \\[-2.7em]
+\begin{minipage}[t]{0.1\linewidth}
+\begin{flushright}
+$$
+\begin{matrix} 
+\delta c_{11} & \delta c_{12} & \cdots & \delta c_{1n} \\
+\delta c_{21} & \delta c_{22} & \cdots & \delta c_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+\delta c_{m1} & \delta c_{m2} & \cdots & \delta c_{mn} \\
+\end{matrix}
+$$
+\end{flushright}
+\end{minipage}
+%}
+\end{enumerate}
+}
+{\scriptsize 
+\begin{itemize}
+\item $cbst$ =  Index ($hst = 1 ... ns$) of the predominant channel-bank soil type at each cell.
+\item $\delta c$ =  Initial thickness of channel bed material (m). Usually $0.5m \leq \delta c \leq 5m$ for small to medium size streams, $\delta c \geq 5m$ for large rivers.
+\end{itemize}
+}
+\VerbatimInput{../test/MESH_sed_gridCell.ini}
+
+\subsection{Dynamic input data}
+\subsubsection{\texttt{sed\_input.r2c}}
+All the dynamic input data required by \ms is saved into \texttt{sed\_input.r2c} file. This file is produced by MESH (see r1295 version and newer) in \texttt{rte\_module.f90} (see starting at line 923) and contains gridded information in r2c format at 1h time step. Variables are written into the file in the following order: 
+{\scriptsize
+\begin{enumerate}
+\item Average flow (discharge) (m$^{3}$ s$^{-1}$). Note: Averaged over the time-step.
+\item Channel depth (m).
+\item Channel width (m).
+\item Channel length (m).
+\item Channel slope (m m$^{-1}$). slope = sqrt(SLOPE\_CHNL)
+\item Stream velocity (m s$^{-1}$). Take stream speed to be average flow (m$^{3}$ s-1) divided by channel x-sec area (m$^{2}$) (from rte\_sub.f).
+\item Precipitation (mm h$^{-1}$). Note: Accumulated over the time-step.
+\item Evapotranspiration (mm h$^{-1}$). Note: Of evapotranspiration accumulated over the time-step.
+\item Overland water depth (mm). Note: Accumulated over the time-step.
+\item Surface slope (m m$^{-1}$). SLOPE\_INT isn't used in CLASS, so average slope from tiles in cell?
+\item Cell width (m).
+\end{enumerate}
+}
+
+
+\section{Output data}
+\subsection{Output data}
+\ms estimates sediment concentration and loads at every cell of the computational grid and for every sediment class at every time step. \ms also estimates changes of the land surface due to accumulation or erosion of sediments. The format of the output information is specified in \texttt{MESH\_sed\_param.ini}. The typical output files are:
+{\tiny
+\begin{center}
+\texttt{ts\_cell\_var\_sedclass.out}\\
+(e.g. \texttt{ts\_10\_load\_veryFineSand.out})
+\end{center}
+\vspace*{-2mm}
+\begin{minipage}[t]{\linewidth}
+$$
+\begin{matrix}
+time_1 & var_1 \\
+time_2 & var_2 \\
+\vdots & \vdots \\
+time_n & var_n \\
+\end{matrix}
+$$
+\end{minipage}
+
+\begin{itemize}
+\item \texttt{ts}: indicate time series.
+\item \texttt{cell}: cell number in MESH grid (\texttt{rank}).
+\item \texttt{var}: it can be \texttt{conce} or \texttt{load}.
+\item \texttt{sedclass}: sediment class (see Table~\ref{sedClass})
+\item \texttt{field}: field (matrices) at different time steps.
+\end{itemize}
+}
+{\tiny
+\begin{center}
+\texttt{field\_var\_sedclass.out}\\
+(e.g. \texttt{field\_conce\_coarseSilt.out})
+\end{center}
+\vspace*{-7mm}
+\begin{minipage}[t]{\linewidth}
+$$
+\begin{matrix}
+time\_1 &  & &  \\
+var_{11} & var_{12} & \cdots & var_{1n} \\
+var_{21} & var_{22} & \cdots & var_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+var_{m1} & var_{m2} & \cdots & var_{mn}\\
+\vdots & \vdots &  & \vdots \\
+\vdots & \vdots &  & \vdots \\
+time\_n &  & &  \\
+var_{11} & var_{12} & \cdots & var_{1n} \\
+var_{21} & var_{22} & \cdots & var_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+var_{m1} & var_{m2} & \cdots & var_{mn}\\
+\end{matrix}
+$$
+\end{minipage}
+}
+
+\section{Download, compile and execute}
+\subsection{Download}
+\ms can be download from \href{https://github.com/lmoralesma/MESH-SED}{Github Repository} or from command line as: \texttt{git clone https://github.com/lmoralesma/MESH-SED.git}
+
+\subsection{Compile}
+Compile \ms by typing \texttt{make}; produce \texttt{sa\_mesh\_sed}. Use  \texttt{make clean} for removing \texttt{*.o} and \texttt{*.mod} files.
+
+\subsection{execute}
+To run \ms, \texttt{./sa\_mesh\_sed projname} (e.g. \texttt{./sa\_mesh\_sed test}).
+
+\section{References}
+ \bibliographystyle{ieeetr}
+ \bibliography{references}
+
+\end{document}
