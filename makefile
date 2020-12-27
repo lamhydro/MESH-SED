@@ -36,7 +36,10 @@ LFLAG=-c -g -O2 -Wall
 #LFLAG=-c -O2
 #LFLAG=-c -O3 -ffast-math
 #LFLAG=-c -g
-TARGET := ../bin/sa_mesh_sed
+TARGET := ./bin/sa_mesh_sed
+
+#SRC = $(wildcard src/*.f90)
+#OBJECTS = $(SRC:.f90=.o) #main.o stats.o utils.o
 
 # ======================================================================
 # Build SA_MESH executable and print message
@@ -82,6 +85,6 @@ clean:
 # ======================================================================
 veryclean:
 # 'rm' for Cygwin, 'del' for MinGW - comment as necessary
-	rm *.mod *.o sa_mesh_sed
+	rm *.mod *.o $(TARGET)
 #	rm *.mod *.o mpi_sa_mesh
 #	del *.mod *.o sa_mesh.exe

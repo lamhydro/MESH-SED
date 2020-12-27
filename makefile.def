@@ -25,8 +25,8 @@ DIR_REPO=.
 # ======================================================================
 # Include the following directories in the source file searching path
 # ======================================================================
-#VPATH=$(DIR_REPO)/src:
-VPATH=.:
+VPATH=$(DIR_REPO)/src
+#VPATH=.:
 
 # ======================================================================
 # Object files needed to build SA_MESH
@@ -49,9 +49,6 @@ OBJECTS+=	sed_rainDropDetachment.o \
 			sed_inStreamRouting.o \
 			sed_chanBankErosion.o \
 			sed_massBalance.o
-
-
-
 
 #Output files
 #OBJECTS+=	read_config_output.o \

@@ -1,5 +1,8 @@
+*.o
+*.mod
 src/*.mod
 src/*.o
+src/*old
 deprecate/
 doc/*
 !doc/uman.pdf
@@ -11,3 +14,4 @@ test/
 !test/MESH_sed_soilVegChan.ini
 github.sh
 ARBtest/*
+scripts/*

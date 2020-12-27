@@ -187,23 +187,6 @@ program mesh_sed
         !-----------------------------------------------------
         ! READING INPUT DATA
         !-----------------------------------------------------
-        !> INTERPOLATING MET DATA
-        !call readMetData
-        !print *, '->PREP: ', sum(mat1PR), ' ', sum(mv(:)%precip), ' ', sum(mat2PR)
-        !print *, '->EVAP: ', sum(mat1EV), ' ', sum(mv(:)%evapotran), ' ', sum(mat2EV)
-
-        !print *, date1PR, date2PR
-        !print *, 'Reading MET DATA'
-
-        !> INTERPOLATING OVERLAND FLOW DATA
-        !call readOverLandFlowData
-        !print *, date1WR, date2WR
-        !print *, 'OVERLAND FLOW DATA'
-
-        !> INTERPOLATING IN-STREAM FLOW DATA
-        !call readInStreamFlowData
-        !print *, 'Reading IN-STREAM FLOW DATA'
-
         !> READ sed_input.r2c (MESH OUTPUT FILE)
         call readMESHoutputData()
 
@@ -212,18 +195,10 @@ program mesh_sed
         !-----------------------------------------------------
         call hillSlopeLoad_grid()
 
-
-        !-----------------------------------------------------
-        ! INSTREAM UPSTREAM LOADS
-        !-----------------------------------------------------
-        !call upstreamLoad_grid()
-
-
         !-----------------------------------------------------
         ! RIVER BANK EROSION LOADS
         !-----------------------------------------------------
         call bankEroLoad_grid()
-
 
         !-----------------------------------------------------
         ! RIVER BED EROSION(RESUSPENSION) LOADS
@@ -235,11 +210,16 @@ program mesh_sed
         ! CONCENTRATIONS
         !-----------------------------------------------------
         call massBalance2()
-        !print *, 'L_bank: ', sum(cmb(1325)%L_bank(:)), 'L_hill: ', sum(cmb(1325)%L_hill(:)), 'L_in: ',&
-        !            sum(cmb(1325)%L_in(:)), 'L_res: ', sum(cmb(1325)%L_res(:)), rh(1325)%depth, &
-        !            sum(cmb(1325)%C(:)*cbsca(1325)%frac(:)), &
-        !            sum(cmb(1325)%C_pot(:)*cbsca(1325)%frac(:)), rh(1325)%discharge
+        !print *, 'L_bank: ', sum(cmb(848)%L_bank(:)), 'L_hill: ', sum(cmb(848)%L_hill(:)), 'L_in: ',&
+        !            sum(cmb(848)%L_in(:)), 'L_res: ', sum(cmb(848)%L_res(:)), rh(848)%depth, &
+        !            sum(cmb(848)%C(:)*cbsca(848)%frac(:)), &
+        !            sum(cmb(848)%C_pot(:)*cbsca(848)%frac(:)), rh(848)%discharge
 
+		if (isnan(sum(cmb(848)%L_bank(:)))) stop '"L_bank" is a NAN'
+		if (isnan(sum(cmb(848)%L_hill(:)))) stop '"L_hill" is a NAN'
+		if (isnan(sum(cmb(848)%L_in(:)))) stop '"L_in" is a NAN'
+		if (isnan(sum(cmb(848)%L_res(:)))) stop '"L_res" is a NAN'
+		if (isnan(sum(cmb(848)%C_pot(:)*cbsca(848)%frac(:)))) stop '"C_pot" is a NAN'
         !print *, 'L_bank: ', sum(cmb(1000)%L_bank(:)), 'L_hill: ', sum(cmb(1000)%L_hill(:)), 'L_in: ',&
         !            sum(cmb(1000)%L_in(:)), 'L_res: ', sum(cmb(1000)%L_res(:)), rh(1000)%depth, &
         !            sum(cmb(1000)%C(:)*cbsca(1000)%frac(:)), &
@@ -249,139 +229,6 @@ program mesh_sed
         !        sum(cmb(1000)%C(:)*cbsca(1000)%frac(:)), rh(1000)%velocity, sum(cmb(1000)%L_out(:))
         !print *, sum(cbsca(1325)%frac(:)), sum(bsca(1325)%frac(:))
         !stop
-
-        !stop
-        !do i=1,NA
-            !write(*,'(13(F15.2))')  D_R(i,:)
-        !print*, maxval(cmb(1325)%C(:)), minval(cmb(1325)%C(:)), rh(1325)%discharge
-        !print*, 'herere: ->',  sum(cmb(1325)%L_bank(:)), rh(1325)%discharge, rh(1325)%depth, &
-        !        rh(1325)%length, sum(cmb(1325)%L_bank(:))/(2*rh(1325)%depth*rh(1325)%length)
-        !L_in, L_bank, L_dep, L_hill
-        !end do
-
-
-        !print *, sum(mv(:)%precip), " ",sum(mv(:)%evapotran), " ", sum(ofh(:)%discharge)," ", sum(rh(:)%discharge)
-
-        !-----------------------------------------------------
-        ! HILLSLOPE TRANSPORT
-        !-----------------------------------------------------
-        !> Raindrop detachment
-        !call rainDropDetachCell()
-        !print *, dateIn,',', maxval(mv(:)%precip)-minval(mv(:)%precip), ',', minval(D_R(:)), ',', maxval(D_R(:))
-        !do i=1,NA
-            !write(*,'(13(F15.2))')  D_R(i,:)
-            !print*, mv(i)%precip, ' ', D_R(i)
-        !end do
-
-        !> Overland flow detachment
-        !call overlandFlowDetachCell()
-        !print *, dateIn, ',', minval(ofh(:)%depth), ',', maxval(ofh(:)%depth), &
-        !',',minval(D_F(:)), ',', maxval(D_F(:)), ',', &
-         !maxval(sca(:)%overlandDetach)
-        !do i=1,NA
-            !write(*,'(13(F15.2))')  D_F(i,:)
-        !    print *, D_F(i)
-        !end do
-
-        ! Calculate variables at the cell edges
-        !call varsAtCellEdge()
-
-        ! Hillslope routing
-        !- 1) Estimate transport capacity at the outlet of the cell
-        !print*,
-        !print*, '----1----'
-        !call overlandFlowTransCapa_outCell()
-        !print *,dateIn, ',', G_out(56)%east,',', G_out(56)%north,',', G_out(56)%west,',', G_out(56)%south
-        !do i=1,NA
-            !write(*,'(13(F15.2))')  G(i,:)
-            !print*, i, G_out(i)%east, G_out(i)%north, G_out(i)%west, G_out(i)%south
-        !end do
-
-
-
-        !- 2) Estimate potential sediment concentration
-        !print*,
-        !print*, '----2----'
-        !call potentialSedConc()
-        !print *,dateIn, ',', sum(csa(1)%C(:)),',', sum(csa(56)%C(:)),',', sum(csa(130)%C(:)),',', sum(csa(324)%C(:))
-        !print *, minval(csa(:)%C), ' ', maxval(csa(:)%C)
-        !do i=1,NA
-            !write(*,'(13(F15.2))')  G(i,:)
-            !print*, i, F(i)%nfluxes, F(i)%east, F(i)%north, F(i)%west, F(i)%south !C(i)
-            !do j = 1, nsedpar
-            !    print*, i, ' ', csa(i)%C(j)
-            !    if (isnan(csa(i)%C(j))) stop '"x" is a NaN' ! HERERERERERERERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
-            !end do
-        !end do
-
-        !- 3) Estimate potential change in surface elevation
-        !print*,
-        !print*, '----3----'
-        !call potentialChanSufEle()
-        !print *,dateIn, ',', csa(1)%pot_Dz,',',csa(56)%pot_Dz,',', csa(130)%pot_Dz,',', csa(324)%pot_Dz, ',', &
-        !minval(csa(:)%pot_Dz), ',',maxval(csa(:)%pot_Dz)
-        !do i=1,NA
-        !    print*, csa(i)%pot_Dz
-        !    if (isnan(csa(i)%pot_Dz)) stop '"x" is a NaN'
-        !end do
-
-        !- 4) Estimate available change in surface elevation
-        !print*,
-        !print*, '----4----'
-        !call availableChanSufEle()
-        !print *,dateIn, ',', csa(1)%ava_Dz,',',csa(56)%ava_Dz,',', !csa(130)%ava_Dz,',', csa(324)%ava_Dz, ',', &
-        !minval(csa(:)%ava_Dz), ',',maxval(csa(:)%ava_Dz)
-
-        !do i=1,NA
-            !print*, csa(i)%ava_Dz
-            !if (isnan(csa(i)%ava_Dz)) stop '"x" is a NaN'
-        !end do
-        !print *, sum(csa(:)%ava_Dz)/NA
-
-
-        !- 5) Compare pot_Dz vs. ava_Dz
-        !print*,
-        !print*, '----5----'
-        !call cellConAndChanSufEle()
-        !print *,dateIn, ',',minval(csa(:)%Dz), ',', maxval(csa(:)%Dz),',',&
-        !sum(csa(1)%C(:)),',', sum(csa(150)%C(:)),',', sum(csa(324)%C(:))
-!        do i=1,NA
-!            print*, csa(i)%Dz, csa(i)%SD, sum(csa(i)%C(:))
-!            if (isnan(csa(i)%Dz)) stop '"x" is a NaN'
-!            if (isnan(csa(i)%SD)) stop '"x" is a NaN'
-!            if (isnan(sum(csa(i)%C))) stop '"x" is a NaN'
-!        end do
-
-        !-----------------------------------------------------
-        ! IN-STREAM TRANSPORT
-        !-----------------------------------------------------
-        ! Instream routing
-        ! - Longitudinal sediment velocity
-        !call longSedVelocity_grid
-!        do i = 1, NA
-!            print *, sum(isrr(i)%Vs(:))
-!            if (isnan(sum(isrr(i)%Vs(:)))) stop '"x" is a NaN'
-!        end do
-
-        ! - Sediment inflow to channel
-        ! -- Channel bank erosion
-        !call grid_bankErosion
-        ! -- Sediment inflows
-        !call flowSedInput
-
-        ! - In-stream sediment routing
-        !call inStreamRouting
-!        do i=1,NA
-!            do j = 1, nsedpar
-!                print*, i, j, isrr(i)%G(j), isrr(i)%C(j), dateIn
-!            end do
-!            if (isnan(sum(isrr(i)%G(:))/nsedpar)) stop '"G" is a NaN'
-!            if (isnan(sum(isrr(i)%C(:))/nsedpar)) stop '"C" is a NaN'
-!        end do
-
-        ! - Update frac diameters in active and parent layers
-        !call setFracDiame
-
 
 
         !-----------------------------------------------------
@@ -404,7 +251,6 @@ program mesh_sed
         write (dateIn, 10) currDate%year, &
         currDate%month,  currDate%day,  currDate%hour, currDate%mins, currDate%secs
         print *, 'DATE & TIME: ', dateIn
-
 
     end do
 

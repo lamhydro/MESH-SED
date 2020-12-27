@@ -72,8 +72,7 @@ module sed_massBalance
             sedMassBalanceDeri = (massIn - massOut)/Vol
         end function sedMassBalanceDeri
 
-
-
+                       
         real function C_new_rk4(C, Q, L_in, Vol, L_bank, L_hill, L_res, alpha, B, D, g, v, rhos, rho, h, S, l, parDLim, dt, frac)
             implicit none
 
@@ -92,6 +91,10 @@ module sed_massBalance
             k4 = sedMassBalanceDeri(C+dt*k3, Q, L_in, Vol, L_bank, L_hill,L_res,alpha, &
                                     B, D, g, v, rhos, rho, h, S, l, parDLim, frac)
 
+            !print *,'C:', C,'Q:', Q,'L_in:', L_in,'Vol:', Vol, 'L_bank:',L_bank, 'L_hill:',L_hill, 'L_res:', L_res, 'alpha:',alpha
+			!print *,'B:',B,'D:', D, 'g:',g, 'v:',v, 'rhos:', rhos, 'rho:', rho,'h:', h, 'S:',S 
+			!print *,'l:',l, 'parDLim:',parDLim, 'dt:',dt, 'frac:',frac
+            !print *,'rks-> ', k1, k2, k3, k4
 
             C_new_rk4 = C + (1./6.)*(k1+2*k2+2*k3+k4)*dt
 
@@ -105,7 +108,7 @@ module sed_massBalance
             use sed_overlandFlowDetachment
             implicit none
 
-            real :: totalHillSero, overFTcapa, aux
+            real :: totalHillSero, overFTcapa, aux, overFTcapaM
 
             !> Raindrop detachment
             call rainDropDetachCell()
@@ -116,23 +119,28 @@ module sed_massBalance
 
             !> Loads from hillslopes
             do i = 1, NA
+                !if ( ofh(i)%depth .gt. 0. ) then
 
-                totalHillSero = (D_R(i)+D_F(i))*(grs(i)%DELX*grs(i)%DELY) !> From kg m^-2 s^-1 to kg s^-1
-!                overFTcapa = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
-!                                                    sca(i)%diameter/1000., &
-!                                                    gravi, ofh(i)%velocity, &
-!                                                    ofh(i)%depth/1000., &
-!                                                    ofh(i)%slope, ofh(i)%width,vis), &
-!                                                    FPCRIT*ofh(i)%discharge)
-                overFTcapa = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
-                                                    sca(i)%diameter/1000., &
-                                                    gravi, ofh(i)%velocity, &
-                                                    ofh(i)%depth/1000., &
-                                                    ofh(i)%slope, ofh(i)%width,vis)*sca(i)%density, &
-                                                    totalHillSero)
+	                totalHillSero = (D_R(i)+D_F(i))*(grs(i)%DELX*grs(i)%DELY) !> From kg m^-2 s^-1 to kg s^-1
+	!                overFTcapa = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
+	!                                                    sca(i)%diameter/1000., &
+	!                                                    gravi, ofh(i)%velocity, &
+	!                                                    ofh(i)%depth/1000., &
+	!                                                    ofh(i)%slope, ofh(i)%width,vis), &
+	!                                                    FPCRIT*ofh(i)%discharge)
+	                overFTcapaM = overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
+	                                                    sca(i)%diameter/1000., &
+	                                                    gravi, ofh(i)%velocity, &
+	                                                    ofh(i)%depth/1000., &
+	                                                    ofh(i)%slope, ofh(i)%width,vis)*sca(i)%density
+	                overFTcapa = min(overFTcapaM, totalHillSero)
 
+                    aux = min(FPCRIT*ofh(i)%discharge*sca(i)%density,overFTcapa)
+					!print *, FPCRIT, ofh(i)%discharge, sca(i)%density, overFTcapaM, totalHillSero
+                !else
+                !    aux = 0.
+                !end if
 
-                aux = min(FPCRIT*ofh(i)%discharge*sca(i)%density,overFTcapa)
                 !> Loop for each sediment particle size
                 do j = 1, nsedpar
                     cmb(i)%L_hill(j) = sca(i)%frac(j)*aux
@@ -150,11 +158,14 @@ module sed_massBalance
             real :: Eb
 
             do i = 1, NA
-
-                !> River bank erosion rate from \f$ (kg m^{-2} s^{-1}) \f$ to  \f$ (kg s^{-1}) \f$
-                Eb = 2*bankRateErosion(bsca(i)%chanBankDetach*1.e-6, rhow, gravi, &
+                !if (rh(i)%depth .gt. 0.) then
+                    !> River bank erosion rate from \f$ (kg m^{-2} s^{-1}) \f$ to  \f$ (kg s^{-1}) \f$
+                    Eb = 2*bankRateErosion(bsca(i)%chanBankDetach*1.e-6, rhow, gravi, &
                                     rh(i)%depth, rh(i)%slope, bsca(i)%diameter*1e-3, &
                                     vis, bsca(i)%density, rh(i)%width)*(rh(i)%depth*rh(i)%length)
+                !else
+                !    Eb = 0.
+                !end if
 
                 !> Loop for each sediment particle size
                 do j = 1, nsedpar
@@ -174,9 +185,13 @@ module sed_massBalance
 
             do i = 1, NA
 
-                res = overlandFlowDetachment(rhow, gravi, rh(i)%depth,&
+                !if (rh(i)%depth .gt. 0.) then
+                    res = overlandFlowDetachment(rhow, gravi, rh(i)%depth,&
                             rh(i)%slope, bsca(i)%diameter/1000., vis, cbsca(i)%density, &
                             bsca(i)%chanBankDetach*1.e-6)
+                !else
+                !    res = 0.
+                !end if
 
                 !> Loop for each sediment particle size
                 do j = 1, nsedpar
@@ -227,51 +242,54 @@ module sed_massBalance
             call longSedVelocity_grid
 
             do i = 1, NA
-                wetArea =  rh(i)%depth*rh(i)%width
-                do k = 1, nsedpar
-                    if (cbsca(i)%frac(k) > 1.e-6) then
-                        if (sp(k)%meanD > parDLim) then   ! For coarse sediment
-                            !f_i = frac_fi(isrrB(i)%C(k),SFDELi, cbscaB(i)%ly(1)%frac(k)*cbscaB(i)%ly(1)%thick, dc)
-                            f_i = 1.
-                            if (instreamFlowCapaMethod == 1) then
-                                Gc = f_i*overlandFlowTransCapa_engHan(rhow, cbsca(i)%density, &
+
+                !if (rh(i)%depth .gt. 0.) then
+                    wetArea =  rh(i)%depth*rh(i)%width
+                    do k = 1, nsedpar
+                        if (cbsca(i)%frac(k) > 1.e-6) then
+                            if (sp(k)%meanD > parDLim) then   ! For coarse sediment
+                                 !f_i = frac_fi(isrrB(i)%C(k),SFDELi, cbscaB(i)%ly(1)%frac(k)*cbscaB(i)%ly(1)%thick, dc)
+                                  f_i = 1.
+                                  if (instreamFlowCapaMethod == 1) then
+                                       Gc = f_i*overlandFlowTransCapa_engHan(rhow, cbsca(i)%density, &
                                                                 sp(k)%meanD*1e-3, gravi, rh(i)%velocity, &
                                                                 rh(i)%depth, rh(i)%slope, rh(i)%width)
-                            else if (instreamFlowCapaMethod == 2) then
-                                Gc = f_i*inStreamTransCapa_AckersWhite(rhow, cbsca(i)%density, &
+                                  else if (instreamFlowCapaMethod == 2) then
+                                       Gc = f_i*inStreamTransCapa_AckersWhite(rhow, cbsca(i)%density, &
                                                                 sp(k)%meanD*1e-3, gravi, rh(i)%depth, rh(i)%slope, vis, &
                                                                 rh(i)%velocity, rh(i)%discharge)
-                            else if (instreamFlowCapaMethod == 3) then
-                                Gc = f_i*inStreamTransCapa_Day_1(rhow, cbsca(i)%density, sp(k)%meanD*1e-3, &
+                                  else if (instreamFlowCapaMethod == 3) then
+                                       Gc = f_i*inStreamTransCapa_Day_1(rhow, cbsca(i)%density, sp(k)%meanD*1e-3, &
                                                 cbsca(i)%ly(1)%D16*1e-3, cbsca(i)%ly(1)%D50*1e-3, &
                                                 cbsca(i)%ly(1)%D84*1e-3, gravi, rh(i)%depth, rh(i)%slope, &
                                                 vis, rh(i)%velocity, rh(i)%discharge)
-                            else
-                                print *, "Wrong in-stream flow transport capacity method."
-                                print *, "Stopping..."
-                                stop
-                            end if
+                                  else
+                                       print *, "Wrong in-stream flow transport capacity method."
+                                       print *, "Stopping..."
+                                       stop
+                                  end if
 
-                            !cmb(i)%C_pot(k) = cbsca(i)%density * sedCon(Gc, isrr(i)%Vs(k), wetArea) !> Potential concentration in kg/m3 based on transport capacity
-                            cmb(i)%C_pot(k) = cbsca(i)%density * sedCon(Gc*cbsca(i)%frac(k), isrr(i)%Vs(k), wetArea) !> Potential concentration in kg/m3 based on transport capacity
+                                  !cmb(i)%C_pot(k) = cbsca(i)%density * sedCon(Gc, isrr(i)%Vs(k), wetArea) !> Potential concentration in kg/m3 based on transport capacity
+                                  cmb(i)%C_pot(k) = cbsca(i)%density * sedCon(Gc*cbsca(i)%frac(k), isrr(i)%Vs(k), wetArea) !> Potential concentration in kg/m3 based on transport capacity
 
-                            !print *, 'Method: ', instreamFlowCapaMethod, cmb(i)%C_pot(k), Gc
-                            !print *, 'Vs ', isrr(i)%Vs(k), '  V: ', rh(i)%velocity, &
-                            !            sedCon(Gc*cbsca(i)%frac(k), isrr(i)%Vs(k), wetArea), cmb(i)%C_pot(k)
-                            !stop
-                        else ! For fine sediment
+                                  !print *, 'Method: ', instreamFlowCapaMethod, cmb(i)%C_pot(k), Gc
+                                  !print *, 'Vs ', isrr(i)%Vs(k), '  V: ', rh(i)%velocity, &
+                                  !            sedCon(Gc*cbsca(i)%frac(k), isrr(i)%Vs(k), wetArea), cmb(i)%C_pot(k)
+                                  !stop
+                             else ! For fine sediment
 
-                            cmb(i)%C_pot(k) = cbsca(i)%frac(k)*cbsca(i)%density * FPCRIT
+                                  cmb(i)%C_pot(k) = cbsca(i)%frac(k)*cbsca(i)%density * FPCRIT
+                                  !if (isnan(sum(cmb(i)%C_pot(:)))) stop '"C_pot" is a NAN'
 
+                             end if
+                        else
+                             cmb(i)%C_pot(k) = 0.
                         end if
-                    else
-                        cmb(i)%C_pot(k) = 0.
-                    end if
-                end do
-
+                    end do
+               !else
+               !   cmb(i)%C_pot(:) = 0.
+               !end if
             end do
-
-
 
         end subroutine inStreamTransCapa_grid
 
@@ -377,58 +395,63 @@ module sed_massBalance
             call inStreamTransCapa_grid()
 
             do i = 1, NA
-                V = rh(i)%depth * rh(i)%width * rh(i)%length
-                do k = 1, nsedpar
-                    !print *, '==========  ',  cbsca(i)%frac(k)
-                    if (cbsca(i)%frac(k) > 1.e-6) then
-                        !print *, '==========  ',  cbsca(i)%frac(k)
+				if (rh(i)%depth .gt. 0.) then
+                    V = rh(i)%depth * rh(i)%width * rh(i)%length
+					do k = 1, nsedpar
+                	    !print *, '==========  ',  cbsca(i)%frac(k)
+                	    if (cbsca(i)%frac(k) > 1.e-6) then
+                	        !print *, '==========  ',  cbsca(i)%frac(k)
 
-                        !> Estimate L_in first
-                        L_in = 0
-                        if (ion(i)%NreachIn > 0) then
-                            do j = 1, ion(i)%NreachIn
-                                rIn = ion(i)%reachIn(j)
-                                L_in = L_in + cmb(rIn)%C(k) * cbsca(i)%frac(k) * rh(rIn)%discharge
-                            end do
-                        end if
-                        cmb(i)%L_in(k) = L_in
+                	        !> Estimate L_in first
+                	        L_in = 0
+                	        if (ion(i)%NreachIn > 0) then
+                	            do j = 1, ion(i)%NreachIn
+                	                rIn = ion(i)%reachIn(j)
+                	                L_in = L_in + cmb(rIn)%C(k) * cbsca(i)%frac(k) * rh(rIn)%discharge
+                	            end do
+                	        end if
+                	        cmb(i)%L_in(k) = L_in
 
-                        !> Deposited load
-                        cmb(i)%L_dep(k) = depositedLoad(ratioStress, rh(i)%width, sp(k)%meanD, gravi, vis,&
-                                                        cbsca(i)%density, rhow, rh(i)%depth, rh(i)%slope, &
-                                                        cmb(i)%C(k), rh(i)%length, parDLim, cbsca(i)%frac(k))
+                	        !> Deposited load
+                	        cmb(i)%L_dep(k) = depositedLoad(ratioStress, rh(i)%width, sp(k)%meanD, gravi, vis,&
+                	                                        cbsca(i)%density, rhow, rh(i)%depth, rh(i)%slope, &
+                	                                        cmb(i)%C(k), rh(i)%length, parDLim, cbsca(i)%frac(k))
 
-                        !> Outflow load
-                        cmb(i)%L_out(k) = outFlowLoad(cbsca(i)%frac(k), cmb(i)%C(k), rh(i)%discharge)
+                	        !> Outflow load
+                	        cmb(i)%L_out(k) = outFlowLoad(cbsca(i)%frac(k), cmb(i)%C(k), rh(i)%discharge)
 
+                	        C_new = C_new_rk4(cmb(i)%C(k), rh(i)%discharge, cmb(i)%L_in(k), V, &
+                	                    cmb(i)%L_bank(k),cmb(i)%L_hill(k),cmb(i)%L_res(k), ratioStress, rh(i)%width, &
+                	                    sp(k)%meanD, gravi, vis, cbsca(i)%density, rhow,rh(i)%depth, &
+                	                    rh(i)%slope, rh(i)%length, parDLim, DELT, cbsca(i)%frac(k))
+                	        if (isnan(C_new)) stop '"C_New" is a NAN' 
 
-                        C_new = C_new_rk4(cmb(i)%C(k), rh(i)%discharge, cmb(i)%L_in(k), V, &
-                                    cmb(i)%L_bank(k),cmb(i)%L_hill(k),cmb(i)%L_res(k), ratioStress, rh(i)%width, &
-                                    sp(k)%meanD, gravi, vis, cbsca(i)%density, rhow,rh(i)%depth, &
-                                    rh(i)%slope, rh(i)%length, parDLim, DELT, cbsca(i)%frac(k))
+                	        if (C_new < 0.) then
+                	            !C_new = cbsca(i)%frac(k)*cbsca(i)%density * FPCRIT
+								C_new = 0.
+                	        end if
 
-                        if (C_new < 0.) then
-                            C_new = cbsca(i)%frac(k)*cbsca(i)%density * FPCRIT
-                        end if
+!               	         C_new = C_new_rk4(cmb(i)%C(k), rh(i)%discharge, L_in, V, &
+!               	                     cmb(i)%L_bank(k),cmb(i)%L_hill(k), ratioStress, rh(i)%width, &
+!               	                     sp(k)%meanD, gravi, vis, cbsca(i)%density, rhow,rh(i)%depth, &
+!               	                     rh(i)%slope, rh(i)%length, parDLim, DELT, cbsca(i)%frac(k))
 
-!                        C_new = C_new_rk4(cmb(i)%C(k), rh(i)%discharge, L_in, V, &
-!                                    cmb(i)%L_bank(k),cmb(i)%L_hill(k), ratioStress, rh(i)%width, &
-!                                    sp(k)%meanD, gravi, vis, cbsca(i)%density, rhow,rh(i)%depth, &
-!                                    rh(i)%slope, rh(i)%length, parDLim, DELT, cbsca(i)%frac(k))
+                	                    !C_new_rk4(C, Q, L_in, Vol, L_bank, L_hill, alpha, B, D, g, v, rhos, rho, h, S, l, parDLim, dt)
 
-                                    !C_new_rk4(C, Q, L_in, Vol, L_bank, L_hill, alpha, B, D, g, v, rhos, rho, h, S, l, parDLim, dt)
+                	        !> Deposited load
+                	        !cmb(i)%L_dep(k) = cbsca(i)%frac(k)*rateOfDeposition(alpha, B, D*1.e-3, g, v, rhos, rho, h, S, C/rhos)*l
 
-                        !> Deposited load
-                        !cmb(i)%L_dep(k) = cbsca(i)%frac(k)*rateOfDeposition(alpha, B, D*1.e-3, g, v, rhos, rho, h, S, C/rhos)*l
+                	        cmb(i)%C(k) = min(C_new, cmb(i)%C_pot(k))
 
-                        cmb(i)%C(k) = min(C_new, cmb(i)%C_pot(k))
+                	        !delta = cmb(i)%C(k)-cmb(i)%C_pot(k)
+                	    else
+                	        cmb(i)%C(k) = 0.
 
-                        delta = cmb(i)%C(k)-cmb(i)%C_pot(k)
-                    else
-                        cmb(i)%C(k) = 0.
-
-                    end if
-                end do
+                	    end if
+                	end do
+				else
+                	cmb(i)%C(:) = 0.
+				end if
 
             end do
 
