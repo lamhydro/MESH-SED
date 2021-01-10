@@ -36,9 +36,9 @@ module sed_output
                 !print *, filename
                 call openFile(fileunit, opin%outputDir, filename)
 
-                write(fileunit, FMT='(1X, A, 10(", ", A))') 'DateTime', 'L_in(kg/s)', 'L_bank(kg/s)', 'L_hill(kg/s)', &
-                                                            'L_res(kg/s)','L_dep(kg/s)','L_out(kg/s)', 'C(kg/m3)', 'C_pot(kg/m3)', &
-                                                            'Q(m3/s)', 'P(mm/h)'
+                write(fileunit, FMT='(1X, A, 10(",",A))') 'DateTime','L_in(kg/s)','L_bank(kg/s)','L_hill(kg/s)', &
+                                                            'L_res(kg/s)','L_dep(kg/s)','L_out(kg/s)','C(kg/m3)','C_pot(kg/m3)', &
+                                                            'Q(m3/s)','P(mm/h)'
 
 
 
@@ -141,7 +141,7 @@ module sed_output
 !                                                                 cmb_h(nn)%rhQ/niter, &
 !                                                                 cmb_h(nn)%rhH/niter
 
-                write(fileunit, FMT='(1X, A, 10(", ", F16.7))') trim(dateIn), &
+                write(fileunit, FMT='(1X, A, 10(",",F16.7))') trim(dateIn), &
                                                                  cmb_h(nn)%L_in/niter, &
                                                                  cmb_h(nn)%L_bank/niter, &
                                                                  cmb_h(nn)%L_hill/niter, &

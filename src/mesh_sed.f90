@@ -169,7 +169,8 @@ program mesh_sed
     !call sed_before_vars()
 
     ! MAIN LOOP: ITERATION THROUGH TIME
-10  format('"',I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000"')
+    !10  format('"',I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000"')
+10  format(I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000')
     do
 
         !call currDate_update
