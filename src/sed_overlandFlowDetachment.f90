@@ -163,10 +163,17 @@ module sed_overlandFlowDetachment
                         !D_F(i) = overlandFlowDetachment(rhow, gravi, waterDepth(i)/1000.,&
                         !            waterSslope(i), cellSoilChar(i)%diameter/1000., vis, cellSoilChar(i)%density, &
                         !            cellSoilChar(i)%overlandDetach)
+                        !print *, 'Here: ', rhow, gravi, ofh(i)%depth/1000.,&
+                        !            ofh(i)%slope, sca(i)%diameter/1000., vis, sca(i)%density, &
+                        !            sca(i)%overlandDetach
 
-                        D_F(i) = overlandFlowDetachment(rhow, gravi, ofh(i)%depth/1000.,&
-                                    ofh(i)%slope, sca(i)%diameter/1000., vis, sca(i)%density, &
-                                    sca(i)%overlandDetach*1.e-6)
+                        !D_F(i) = overlandFlowDetachment(rhow, gravi, ofh(i)%depth/1000.,&
+                        !            ofh(i)%slope, sca(i)%diameter/1000., vis, sca(i)%density, &
+                        !            sca(i)%overlandDetach*1.e-6)
+
+                        D_F(i) = overlandFlowDetachment(rhow, gravi, ofh(i)%depth,&
+                                    ofh(i)%slope, sca(i)%diameter, vis, sca(i)%density, &
+                                    sca(i)%overlandDetach)
                     !else
                     !    D_F(i,j) = -9999.9
                     !end if
