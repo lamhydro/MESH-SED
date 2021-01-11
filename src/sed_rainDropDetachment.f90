@@ -203,10 +203,6 @@ module sed_rainDropDetachment
 
         end function rainDropDetach
 
-
-
-
-
         subroutine rainDropDetachCell()
         ! Estimate rain-drop detachment for each active cell
 
@@ -239,9 +235,14 @@ module sed_rainDropDetachment
                         ! cellCanopyCov(i))
 
 
-                        ! NOTE: evapotran converted from mm/h to m/s
+                        ! NOTE: evapotran converted from mm/h to m/s (NOT SURE ABOUT THIS CONVERSION)
+                        !print *, 'here: ', mv(i)%precip, vca(i)%dropDiam, vca(i)%percDrip, &
+                        !                    mv(i)%evapotran, & 
+                        !                    rhow, pi, vca(i)%fallHeight, gravi, ofh(i)%depth, &
+                        !                    sca(i)%soilDetach, gca(i)%cellGroundCov, gca(i)%cellCanopyCov
+
                         D_R(i) = rainDropDetach(mv(i)%precip, vca(i)%dropDiam, &
-                         vca(i)%percDrip, mv(i)%evapotran/(1000*3600), rhow, pi, &
+                         vca(i)%percDrip, mv(i)%evapotran, rhow, pi, &
                          vca(i)%fallHeight, gravi, ofh(i)%depth, &
                          sca(i)%soilDetach, gca(i)%cellGroundCov, &
                          gca(i)%cellCanopyCov)
