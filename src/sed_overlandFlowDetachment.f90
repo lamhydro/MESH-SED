@@ -66,7 +66,8 @@ module sed_overlandFlowDetachment
             Rey = max(0.03,Vs*D/v)
 
             ! Critical dimensionles shear stress
-            if (Rey > 0.03 .and. Rey <= 1.0) then
+            a = 0.10; b = -0.30
+            if (Rey >= 0.03 .and. Rey <= 1.0) then
                 a = 0.10; b = -0.30
             else if (Rey > 1.0 .and. Rey <= 6.0) then
                 a = 0.10; b = -0.62
@@ -78,8 +79,6 @@ module sed_overlandFlowDetachment
                 a = 0.030; b = 0.10
             else if (Rey > 400.0) then
                 a = 0.056; b = 0.0
-            else
-                a = 0.10; b = -0.30
             end if
             !print *, 'Rey:', Rey, a , b
             critDimenShearStress = a*(Rey**b)
