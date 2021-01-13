@@ -63,7 +63,7 @@ module sed_overlandFlowDetachment
             Vs = shearVelocity(rho, gravi, h, S)
 
             ! Particle Reynolds number
-            Rey = Vs*D/v
+            Rey = max(0.03,Vs*D/v)
 
             ! Critical dimensionles shear stress
             if (Rey > 0.03 .and. Rey <= 1.0) then
