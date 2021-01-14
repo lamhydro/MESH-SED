@@ -49,10 +49,6 @@ program mesh_sed
     !> Read 'MESH_sed_reservoir.ini'
     call read_sed_reservoir
 
-
-
-
-
     !print*, cn(24)%east, cn(24)%north, cn(24)%west, cn(24)%south
     !print *,'!------------------------------------------------------!'
     !print *,'! Reading ', 'MESH_parameters_sediment.ini'

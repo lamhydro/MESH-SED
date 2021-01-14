@@ -108,7 +108,7 @@ module sed_massBalance
             use sed_overlandFlowDetachment
             implicit none
 
-            real :: totalHillSero, overFTcapa, aux, overFTcapaM
+            real :: totalHillSero, overFTcapa, aux
 
             !> Raindrop detachment
             call rainDropDetachCell()
@@ -122,21 +122,14 @@ module sed_massBalance
                 !if ( ofh(i)%depth .gt. 0. ) then
 
 	                totalHillSero = (D_R(i)+D_F(i))*(grs(i)%DELX*grs(i)%DELY) !> From kg m^-2 s^-1 to kg s^-1
-	!                overFTcapa = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
-	!                                                    sca(i)%diameter/1000., &
-	!                                                    gravi, ofh(i)%velocity, &
-	!                                                    ofh(i)%depth/1000., &
-	!                                                    ofh(i)%slope, ofh(i)%width,vis), &
-	!                                                    FPCRIT*ofh(i)%discharge)
-	                overFTcapaM = overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
+	                overFTcapa = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
 	                                                    sca(i)%diameter/1000., &
 	                                                    gravi, ofh(i)%velocity, &
 	                                                    ofh(i)%depth/1000., &
-	                                                    ofh(i)%slope, ofh(i)%width,vis)*sca(i)%density
-	                overFTcapa = min(overFTcapaM, totalHillSero)
-
-                    aux = min(FPCRIT*ofh(i)%discharge*sca(i)%density,overFTcapa)
-					!print *, FPCRIT, ofh(i)%discharge, sca(i)%density, overFTcapaM, totalHillSero
+	                                                    ofh(i)%slope, ofh(i)%width,vis), &
+	                                                    FPCRIT*ofh(i)%discharge)
+                    aux = min(overFTcapa*sca(i)%density,totalHillSero)
+					!print *, FPCRIT, ofh(i)%discharge, sca(i)%density, overFTcapaM, totalHillSero, D_R(i), D_F(i)
                 !else
                 !    aux = 0.
                 !end if
@@ -161,7 +154,7 @@ module sed_massBalance
                 !if (rh(i)%depth .gt. 0.) then
                     !> River bank erosion rate from \f$ (kg m^{-2} s^{-1}) \f$ to  \f$ (kg s^{-1}) \f$
                     Eb = 2*bankRateErosion(bsca(i)%chanBankDetach*1.e-6, rhow, gravi, &
-                                    rh(i)%depth, rh(i)%slope, bsca(i)%diameter*1e-3, &
+                                    rh(i)%depth, rh(i)%slope, bsca(i)%diameter*1e-0, &
                                     vis, bsca(i)%density, rh(i)%width)*(rh(i)%depth*rh(i)%length)
                 !else
                 !    Eb = 0.
