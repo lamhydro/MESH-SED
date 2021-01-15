@@ -154,7 +154,7 @@ module sed_massBalance
                 !if (rh(i)%depth .gt. 0.) then
                     !> River bank erosion rate from \f$ (kg m^{-2} s^{-1}) \f$ to  \f$ (kg s^{-1}) \f$
                     Eb = 2*bankRateErosion(bsca(i)%chanBankDetach*1.e-6, rhow, gravi, &
-                                    rh(i)%depth, rh(i)%slope, bsca(i)%diameter*1e-0, &
+                                    rh(i)%depth, rh(i)%slope, bsca(i)%diameter*1.e-3, &
                                     vis, bsca(i)%density, rh(i)%width)*(rh(i)%depth*rh(i)%length)
                 !else
                 !    Eb = 0.
