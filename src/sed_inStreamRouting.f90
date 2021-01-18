@@ -50,7 +50,7 @@ module sed_inStreamRouting
         end function criBedShearVelocity
 
 
-        function longSedVelocity(Vel, rho, gravi, h, S, D, v, rhos)
+        function longSedVelocity(Vel, rho, gravi, h, S, D, v, rhos, parDLim)
         ! Longitudinal sediment velocity (Phillips and Sutherland, 1985)
         ! Input:
         ! - Vel: Water velocity (m/s)
@@ -61,15 +61,16 @@ module sed_inStreamRouting
         ! - D: Sediment diameter (m)
         ! - v: Kinematic viscosity of water (m^2/s)
         ! - rhos: Sediment density (kg/m^3)
+        ! - parDLim: Particle diameter limit (m)
         ! Output:
         ! - longSedVelocity: Longitudinal sediment velocity (m/s)
 
             implicit none
 
-            real, intent(in) :: Vel, rho, gravi, h, S, D, v, rhos
+            real, intent(in) :: Vel, rho, gravi, h, S, D, v, rhos, parDLim
             real :: longSedVelocity, Vb, Vcb
 
-            if (D > 0.062*1e-3) then ! For particles bigger than Silt and Clay
+            if (D > parDLim) then ! For particles bigger than Silt and Clay
 
                 Vcb = criBedShearVelocity(rho, gravi, h, S, D, v, rhos)
                 Vb = bedShearVelocity(gravi, h, S)
@@ -95,7 +96,7 @@ module sed_inStreamRouting
                     !if (cbsca(i)%ly(1)%frac(j) > 0.) then
                         isrr(i)%Vs(j) = longSedVelocity(rh(i)%velocity, rhow, &
                                              gravi, rh(i)%depth, rh(i)%slope, sp(j)%meanD*1e-3, &
-                                             vis, cbsca(i)%density)
+                                             vis, cbsca(i)%density, parDLim*1.e-3)
                     !end if
                 end do
             end do
