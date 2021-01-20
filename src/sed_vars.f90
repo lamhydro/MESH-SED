@@ -225,7 +225,7 @@ module sed_vars
     !real, parameter :: theta = 0.65, theta_r = 0.5 , phi = 0.5 ! stability parameters in the finite difference scheme
     integer, parameter :: nsedpar = 14 !< Number of possible sediment particle size classes.
     integer, parameter :: nchbedly = 2 !< Number of channel bed layers.
-    real, parameter :: parDLim = 0.062 !< Particle diameter limit (mm) between fine and non-fine sediments.
+    real, parameter :: parDLim = 0.25 !< Particle diameter limit (mm) between fine and non-fine sediments.
     integer, parameter :: DELTout = 3600 !< Time step at which met and hydro vars are read from MESH.
 
     ! Dummy variables
