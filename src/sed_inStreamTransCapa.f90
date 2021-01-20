@@ -178,6 +178,7 @@ module sed_inStreamTransCapa
 
         real function inStreamTransCapa_Day_1(rho, rhos, Dm, D16, D50, D84, gravi, h, S, v, Vel, Q)
         ! Transport capacity of total loads (bed and suspended loads) by Day 1980 (a modifification of Ackers and White)
+        ! More suitable for gravel-bed channels.
         ! NOTE: This is the subroutine converted into function for one diameter once a time.
         ! Input:
         ! - rho: Water density (kg/m^3)
