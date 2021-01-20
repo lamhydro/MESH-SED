@@ -116,8 +116,6 @@ module sed_input
 !            read(unit = unitParam,fmt = *)
 !            read(unit = unitParam,fmt = *) OUTFIELDfolder
             read(unit = unitParam,fmt = *)
-            read(unit = unitParam,fmt = *) theta, theta_r, phi
-            read(unit = unitParam,fmt = *)
             read(unit = unitParam,fmt = *) overlFlowCapaMethod
             read(unit = unitParam,fmt = *)
             read(unit = unitParam,fmt = *) instreamFlowCapaMethod
@@ -336,7 +334,7 @@ module sed_input
 
             ! Read channel-bed soil attributes
             read(unit = unitSoVeCha,fmt = *)
-            read(unit = unitSoVeCha,fmt = *) threChanCon, maxBedThick, ratioStress
+            read(unit = unitSoVeCha,fmt = *) ratioStress
 !            read(unit = unitSoVeCha, fmt = *) NBEDSOIL
 !            allocate(cbsa(NBEDSOIL))
 !            do j = 1,NBEDSOIL

@@ -293,7 +293,7 @@ module sed_vars
         real,dimension(nsedpar) :: frac !< Fractions of each sediment class in the bed deposits
     end type chbedlayer
 
-    real :: threChanCon, maxBedThick, ratioStress
+    real :: ratioStress
     !integer :: NBEDSOIL
     type :: chanBedSoilAttrib !< Contains attributes of channel bed soil
         type(chbedlayer),dimension(nchbedly) :: ly
