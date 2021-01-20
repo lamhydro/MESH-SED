@@ -49,10 +49,6 @@ program mesh_sed
     !> Read 'MESH_sed_reservoir.ini'
     call read_sed_reservoir
 
-
-
-
-
     !print*, cn(24)%east, cn(24)%north, cn(24)%west, cn(24)%south
     !print *,'!------------------------------------------------------!'
     !print *,'! Reading ', 'MESH_parameters_sediment.ini'
@@ -169,7 +165,8 @@ program mesh_sed
     !call sed_before_vars()
 
     ! MAIN LOOP: ITERATION THROUGH TIME
-10  format('"',I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000"')
+    !10  format('"',I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000"')
+10  format(I4,'/',I2.2,'/',I2.2,1X,I2.2,':',I2.2,':',I2.2,'.000')
     do
 
         !call currDate_update

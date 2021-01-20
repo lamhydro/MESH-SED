@@ -63,10 +63,11 @@ module sed_overlandFlowDetachment
             Vs = shearVelocity(rho, gravi, h, S)
 
             ! Particle Reynolds number
-            Rey = Vs*D/v
+            Rey = max(0.03,Vs*D/v)
 
             ! Critical dimensionles shear stress
-            if (Rey > 0.03 .and. Rey <= 1.0) then
+            a = 0.10; b = -0.30
+            if (Rey >= 0.03 .and. Rey <= 1.0) then
                 a = 0.10; b = -0.30
             else if (Rey > 1.0 .and. Rey <= 6.0) then
                 a = 0.10; b = -0.62
@@ -78,8 +79,6 @@ module sed_overlandFlowDetachment
                 a = 0.030; b = 0.10
             else if (Rey > 400.0) then
                 a = 0.056; b = 0.0
-            else
-                a = 0.10; b = -0.30
             end if
             !print *, 'Rey:', Rey, a , b
             critDimenShearStress = a*(Rey**b)
@@ -163,11 +162,15 @@ module sed_overlandFlowDetachment
                         !D_F(i) = overlandFlowDetachment(rhow, gravi, waterDepth(i)/1000.,&
                         !            waterSslope(i), cellSoilChar(i)%diameter/1000., vis, cellSoilChar(i)%density, &
                         !            cellSoilChar(i)%overlandDetach)
+                        !print *, 'Here: ', rhow, gravi, ofh(i)%depth/1000.,&
+                        !            ofh(i)%slope, sca(i)%diameter/1000., vis, sca(i)%density, &
+                        !            sca(i)%overlandDetach
 
                         D_F(i) = overlandFlowDetachment(rhow, gravi, ofh(i)%depth/1000.,&
                                     ofh(i)%slope, sca(i)%diameter/1000., vis, sca(i)%density, &
                                     sca(i)%overlandDetach*1.e-6)
-                    !else
+
+                   !else
                     !    D_F(i,j) = -9999.9
                     !end if
 

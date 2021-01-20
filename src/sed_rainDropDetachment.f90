@@ -35,7 +35,8 @@ module sed_rainDropDetachment
             end if
 
             ! Estimate the squared momentum
-            sqrMomRain = alpha*(I/3.6e6)**beta
+            !sqrMomRain = alpha*(I/3.6e6)**beta
+            sqrMomRain = alpha*(I)**beta
 
         end function sqrMomRain
 
@@ -63,7 +64,7 @@ module sed_rainDropDetachment
 
 
             leafDripVol = pi*((d*1e-3)**3)/6
-            sqrMomLeafDrip = (drip*draina*(rho*v*leafDripVol)**2)/leafDripVol
+            sqrMomLeafDrip = (drip*draina*leafDripVol*(rho*v)**2)
 
         end function sqrMomLeafDrip
 
@@ -93,7 +94,6 @@ module sed_rainDropDetachment
         end function leafDripFallVel
 
 
-
         function frictionConst(d,rho,X,pi)
         ! Friction constant (beta)
         ! Input:
@@ -114,39 +114,65 @@ module sed_rainDropDetachment
             if (d <= 3.3) then
                 frictionConst = leafDripMass/(2200*d*1e-3)
             end if
-            if (d > 3.3 .and. X < 7.5) then
+            if (d > 3.3 .or. X < 7.5) then
                 frictionConst = leafDripMass/(1640*d*1e-3 + 1.93)
             end if
-            if (d > 3.3 .and. X >= 7.5) then
+            if (d > 3.3 .or. X >= 7.5) then
                 frictionConst = leafDripMass/(660*d*1e-3 + 5.14)
             end if
 
         end function frictionConst
 
 
+        function effectiveDripDiame(pnetto, draina, d)
+        ! Effective drid/drop diameter
+        ! Input:
+        ! - pnetto: net precipitation rate including drainage from canopy (m/s)
+        ! - draina: Canopy drainage (Evapotranspiration) (m/s)
+        ! - d: Leaf drop diameter (m)
+        ! Output:
+        ! - effectiveDripDiame: Effective drip/drop diameter (m)
+            implicit none
 
-        function waterDepthCorrFact(I,h,d)
+            real, intent(in) :: pnetto, draina, d
+            real, parameter :: dmin=1.E-04 ! mininum effective drid diameter (m)
+            real :: effectiveDripDiame
+
+            if (pnetto == 0.) then
+                effectiveDripDiame = dmin
+            else
+                effectiveDripDiame = max(dmin,d*(pnetto/draina),0.01935*(pnetto**0.182))
+            end if
+
+        end function effectiveDripDiame
+        
+
+        function waterDepthCorrFact(I,h,d,draina)
         ! Water depth correction factor (Fw)
         ! Input:
         ! - I: Rainfall intensity (mm/h)
         ! - h: Water depth (mm)
         ! - d: Leaf drop diameter (mm)
+        ! - draina: Canopy drainage (Evapotranspiration) (m/s)
         ! Output:
         ! - waterDepthCorrFact: Water depth correction factor
 
             implicit none
 
-            real, intent(in) :: I,h,d
+            real, intent(in) :: I,h,d,draina
             real :: waterDepthCorrFact, dm
 
-            if (I > 0.) then
-                ! Median rain-drop diameter (m)
-                dm = 1.24e-3*I**0.182
-                dm = dm*1000. ! from (m) to (mm)
-            else
-                ! dm is equal to leaf-drop diameter (just for certain time after the rainfall event)
-                dm = d
-            end if
+            !if (I > 0.) then
+            !    ! Median rain-drop diameter (m)
+            !    dm = 1.24e-3*I**0.182
+            !    dm = dm*1000. ! from (m) to (mm)
+            !else
+            !    ! dm is equal to leaf-drop diameter (just for certain time after the rainfall event)
+            !    dm = d
+            !end if
+
+            ! Effective drip/drop diameter (m)
+            dm = effectiveDripDiame(I/(3600*1000.), draina, d/1000.)*1000. ! by 1000 to convert m to mm
 
             if (h > dm) then
                 waterDepthCorrFact = exp(1-h/dm)
@@ -192,7 +218,7 @@ module sed_rainDropDetachment
             end if
             !if (isnan(M_D)) stop '"M_D" is a NaN'
 
-            Fw = waterDepthCorrFact(I, h, d)
+            Fw = waterDepthCorrFact(I, h, d, draina)
             !if (isnan(Fw)) stop '"Fw" is a NaN'
             rainDropDetach = K_R*Fw*(1 - C_G)*( (1 - C_C)*M_R + M_D )
             !if (rainDropDetach<0.) then
@@ -202,10 +228,6 @@ module sed_rainDropDetachment
 
 
         end function rainDropDetach
-
-
-
-
 
         subroutine rainDropDetachCell()
         ! Estimate rain-drop detachment for each active cell
@@ -239,9 +261,14 @@ module sed_rainDropDetachment
                         ! cellCanopyCov(i))
 
 
-                        ! NOTE: evapotran converted from mm/h to m/s
+                        ! NOTE: evapotran converted from mm/h to m/s (NOT SURE ABOUT THIS CONVERSION)
+                        !print *, 'here: ', mv(i)%precip, vca(i)%dropDiam, vca(i)%percDrip, &
+                        !                    mv(i)%evapotran, & 
+                        !                    rhow, pi, vca(i)%fallHeight, gravi, ofh(i)%depth, &
+                        !                    sca(i)%soilDetach, gca(i)%cellGroundCov, gca(i)%cellCanopyCov
+
                         D_R(i) = rainDropDetach(mv(i)%precip, vca(i)%dropDiam, &
-                         vca(i)%percDrip, mv(i)%evapotran/(1000*3600), rhow, pi, &
+                         vca(i)%percDrip, mv(i)%evapotran/(3600*1000.), rhow, pi, &
                          vca(i)%fallHeight, gravi, ofh(i)%depth, &
                          sca(i)%soilDetach, gca(i)%cellGroundCov, &
                          gca(i)%cellCanopyCov)

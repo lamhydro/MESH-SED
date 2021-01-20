@@ -27,8 +27,8 @@ module sed_massBalance
             real, intent(in) :: alpha, B, D, g, v, rhos, rho, h, S, C, l, parDLim, frac
 
             if (D > parDLim) then
-                !depositedLoad = 0.
-                depositedLoad = frac*sedSettlVelo(D*1.e-3, g, v, rhos, rho) * B * l * C !<  [kg s^-1]
+                depositedLoad = 0.
+                !depositedLoad = frac*sedSettlVelo(D*1.e-3, g, v, rhos, rho) * B * l * C !<  [kg s^-1]
                 !print *, '->> coarse'
             else
                 depositedLoad = frac*rateOfDeposition(alpha, B, D*1.e-3, g, v, rhos, rho, h, S, C/rhos)*l !< From [kg m^-1 s^-1] to [kg s^-1]
@@ -37,11 +37,13 @@ module sed_massBalance
 
         end function depositedLoad
 
+
         real function outFlowLoad(frac, C, Q)
             implicit none
             real, intent(in) :: frac, C, Q
             outFlowLoad = frac * C * Q
         end function outFlowLoad
+
 
         real function sedMassBalanceDeri(C, Q, L_in, Vol, L_bank, L_hill, L_res, alpha, B, D, g, v, &
                                         rhos, rho, h, S, l, parDLim, frac)
@@ -108,7 +110,7 @@ module sed_massBalance
             use sed_overlandFlowDetachment
             implicit none
 
-            real :: totalHillSero, overFTcapa, aux, overFTcapaM
+            real :: totalHillSero, overFTcapa, aux
 
             !> Raindrop detachment
             call rainDropDetachCell()
@@ -122,21 +124,14 @@ module sed_massBalance
                 !if ( ofh(i)%depth .gt. 0. ) then
 
 	                totalHillSero = (D_R(i)+D_F(i))*(grs(i)%DELX*grs(i)%DELY) !> From kg m^-2 s^-1 to kg s^-1
-	!                overFTcapa = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
-	!                                                    sca(i)%diameter/1000., &
-	!                                                    gravi, ofh(i)%velocity, &
-	!                                                    ofh(i)%depth/1000., &
-	!                                                    ofh(i)%slope, ofh(i)%width,vis), &
-	!                                                    FPCRIT*ofh(i)%discharge)
-	                overFTcapaM = overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
+	                overFTcapa = min(overlandFlowTransCapa(overlFlowCapaMethod, rhow, sca(i)%density, &
 	                                                    sca(i)%diameter/1000., &
 	                                                    gravi, ofh(i)%velocity, &
 	                                                    ofh(i)%depth/1000., &
-	                                                    ofh(i)%slope, ofh(i)%width,vis)*sca(i)%density
-	                overFTcapa = min(overFTcapaM, totalHillSero)
-
-                    aux = min(FPCRIT*ofh(i)%discharge*sca(i)%density,overFTcapa)
-					!print *, FPCRIT, ofh(i)%discharge, sca(i)%density, overFTcapaM, totalHillSero
+	                                                    ofh(i)%slope, ofh(i)%width,vis), &
+	                                                    FPCRIT*ofh(i)%discharge) !> Given in m^3/s
+                    aux = min(overFTcapa*sca(i)%density,totalHillSero)
+					!print *, FPCRIT, ofh(i)%discharge, sca(i)%density, overFTcapaM, totalHillSero, D_R(i), D_F(i)
                 !else
                 !    aux = 0.
                 !end if
@@ -161,7 +156,7 @@ module sed_massBalance
                 !if (rh(i)%depth .gt. 0.) then
                     !> River bank erosion rate from \f$ (kg m^{-2} s^{-1}) \f$ to  \f$ (kg s^{-1}) \f$
                     Eb = 2*bankRateErosion(bsca(i)%chanBankDetach*1.e-6, rhow, gravi, &
-                                    rh(i)%depth, rh(i)%slope, bsca(i)%diameter*1e-3, &
+                                    rh(i)%depth, rh(i)%slope, bsca(i)%diameter*1.e-3, &
                                     vis, bsca(i)%density, rh(i)%width)*(rh(i)%depth*rh(i)%length)
                 !else
                 !    Eb = 0.
@@ -279,6 +274,7 @@ module sed_massBalance
                              else ! For fine sediment
 
                                   cmb(i)%C_pot(k) = cbsca(i)%frac(k)*cbsca(i)%density * FPCRIT
+                                  !cmb(i)%C_pot(k) = cbsca(i)%density * sedCon(FPCRIT*rh(i)%discharge*cbsca(i)%frac(k), isrr(i)%Vs(k), wetArea) !> Potential concentration in kg/m3 based on transport capacity
                                   !if (isnan(sum(cmb(i)%C_pot(:)))) stop '"C_pot" is a NAN'
 
                              end if

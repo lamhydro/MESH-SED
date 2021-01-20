@@ -84,8 +84,8 @@ module sed_overlandFlowTransCapa
 
             end if
 
-
         end function overlandFlowTransCapa_yalin
+
 
         function overlandFlowTransCapa_engHan(rho, rhos, D, gravi, V, h, S, W)
         ! Overland flow transport capacity by Engenlund-Hansen 1967
@@ -112,7 +112,6 @@ module sed_overlandFlowTransCapa
 
             overlandFlowTransCapa_engHan = (0.05 * W * (V**2) * (h**1.5) * (S**1.5))/( ((sg-1)**2)*D*sqrt(gravi) )
 
-
         end function overlandFlowTransCapa_engHan
 
 
@@ -122,7 +121,6 @@ module sed_overlandFlowTransCapa
             integer, intent(in) :: method
             real, intent(in) :: rho, rhos, D, gravi, V, h, S, W, vis
             real :: overlandFlowTransCapa
-
 
             ! By Yalin 1963
             if (method == 1) then
@@ -138,8 +136,8 @@ module sed_overlandFlowTransCapa
 
             end if
 
-
         end function overlandFlowTransCapa
+
 
         subroutine varsAtCellEdge()
             use sed_vars
