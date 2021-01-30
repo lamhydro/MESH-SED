@@ -127,6 +127,8 @@ module sed_input
             read(unit = unitParam,fmt = '(5i4)') startDate%year, startDate%jday, startDate%hour, startDate%mins, startDate%secs
             read(unit = unitParam,fmt = '(5i4)') stopDate%year, stopDate%jday, stopDate%hour, stopDate%mins, stopDate%secs
             read(unit = unitParam,fmt = *)
+            read(unit = unitParam,fmt = '(3F6.3)') rhwidthc, rhveloc, rhdepthc
+            read(unit = unitParam,fmt = *)
             read(unit = unitParam,fmt = *) FPCRIT
             read(unit = unitParam,fmt = *)
             read(unit = unitParam,fmt = *) opin%outputDir
@@ -732,7 +734,6 @@ module sed_input
                                      mat2SED9, date2SED9, &
                                      mat2SED10, date2SED10, mat2SED11, date2SED11, dateIn)
 
-
             do i = 1, NA
                 !> Met variables
 
@@ -777,9 +778,9 @@ module sed_input
                 rh(i)%discharge = sedi%DISC(ipos(i),jpos(i)) !*  1.  Average flow (discharge) (m3 s-1). Note: Averaged over the time-step.
                 rh(i)%length = sedi%CHLE(ipos(i),jpos(i)) !*  4.  Channel length (m).
                 if (rh(i)%wbody == 0) then  !> For channels
-                    rh(i)%width = sedi%WIDT(ipos(i),jpos(i)) !*  3.  Channel width (m).
+                    rh(i)%width = rhwidthc*sedi%WIDT(ipos(i),jpos(i)) !*  3.  Channel width (m).
                     rh(i)%slope = 1.*( sedi%CHSL(ipos(i),jpos(i)) )**2 !*  5.  Channel slope (m m-1). slope = sqrt(SLOPE_CHNL)
-                    rh(i)%velocity = sedi%VELO(ipos(i),jpos(i)) !*  6.  Stream velocity (m s-1). Take stream speed to be average flow (m3 s-1) divided by channel x-sec area (m2) (from rte_sub.f).
+                    rh(i)%velocity = rhveloc*sedi%VELO(ipos(i),jpos(i)) !*  6.  Stream velocity (m s-1). Take stream speed to be average flow (m3 s-1) divided by channel x-sec area (m2) (from rte_sub.f).
                     !rh(i)%depth = sedi%DEPT(ipos(i),jpos(i)) !*  2.  Channel depth (m).
                     !rh(i)%depth = 0.34*rh(i)%discharge**0.341 !*  Channel depth (m). Estimated based on Allen et al, 1994 as MESH water depth is cte
 
@@ -787,7 +788,7 @@ module sed_input
                     if (rh(i)%velocity <= 1e-6  .OR. rh(i)%width <= 1e-6) then
                         rh(i)%depth = 0.
                     else
-                        rh(i)%depth = rh(i)%discharge/(rh(i)%velocity * rh(i)%width)
+                        rh(i)%depth = rhdepthc*rh(i)%discharge/(rh(i)%velocity * rh(i)%width)
                     end if
 
                 else                 !> for reservoir
@@ -796,7 +797,6 @@ module sed_input
                     rh(i)%velocity = rh(i)%discharge/rh(i)%areaRe
 
                 end if
-
 
                 !if (i == 1325 ) then
                     !print *, '-->', i, rh(i)%velocity, rh(i)%depth, 0.34*rh(i)%discharge**0.341, rh(i)%width, rh(i)%discharge
