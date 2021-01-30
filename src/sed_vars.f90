@@ -217,6 +217,9 @@ module sed_vars
     !> stability parameters in the finite difference scheme
     real :: theta, theta_r, phi
 
+    !> Coefficients that affect river width, velocity and depth to account for uncertainty.
+    real :: rhwidthc, rhveloc, rhdepthc
+
     ! Define constant
     real, parameter :: gravi = 9.81 !< Gravity acceleration (m s^-2)
     real, parameter :: pi = 3.14159265359 !< Pi
