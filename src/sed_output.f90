@@ -169,8 +169,10 @@ module sed_output
                 cmb_h(i)%L_dep   = cmb_h(i)%L_dep   + sum(cmb(i)%L_dep(:))
                 cmb_h(i)%L_out   = cmb_h(i)%L_out   + sum(cmb(i)%L_out(:))
 
-                cmb_h(i)%C     = cmb_h(i)%C + sum(cmb(i)%C(:)*cbsca(i)%frac(:))
-                cmb_h(i)%C_pot = cmb_h(i)%C_pot + sum(cmb(i)%C_pot(:)*cbsca(i)%frac(:))
+                !>cmb_h(i)%C     = cmb_h(i)%C + sum(cmb(i)%C(:)*cbsca(i)%frac(:))
+                cmb_h(i)%C     = cmb_h(i)%C + sum(cmb(i)%C(:))
+                !>cmb_h(i)%C_pot = cmb_h(i)%C_pot + sum(cmb(i)%C_pot(:)*cbsca(i)%frac(:))
+                cmb_h(i)%C_pot = cmb_h(i)%C_pot + sum(cmb(i)%C_pot(:))
 
                 cmb_h(i)%rhQ = cmb_h(i)%rhQ + rh(i)%discharge
                 cmb_h(i)%rhH = cmb_h(i)%rhH + rh(i)%depth
