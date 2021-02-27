@@ -79,7 +79,9 @@ module sed_config
 
             allocate(gca(NA), cba(NA))
 
-            allocate(sca(NA), vca(NA), cbsca(NA), cbscaB(NA), bsca(NA))
+            allocate(riverType(NA))
+
+            allocate(sca(NA), vca(NA), cbsca(NA), cbscaB(NA), bsca(NA), rtpc(NA))
 
 
             ! Allocate variables
@@ -158,6 +160,10 @@ module sed_config
                         bsca(i)%density   = sa(cba(i)%soilTypeBank)%density
                         bsca(i)%chanBankDetach   = sa(cba(i)%soilTypeBank)%chanBankDetach
 
+
+                        !< River type parameter for each channel
+                        rtpc(i)%a = rtp(riverType(i))%a
+                        rtpc(i)%b = rtp(riverType(i))%b
 
                         ! For vegetation characteristics
 !                        do k = 1, nvegeType

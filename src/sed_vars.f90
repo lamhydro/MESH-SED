@@ -217,9 +217,6 @@ module sed_vars
     !> stability parameters in the finite difference scheme
     real :: theta, theta_r, phi
 
-    !> Coefficients that affect river width, velocity and depth to account for uncertainty.
-    real :: rhwidthc, rhveloc, rhdepthc
-
     ! Define constant
     real, parameter :: gravi = 9.81 !< Gravity acceleration (m s^-2)
     real, parameter :: pi = 3.14159265359 !< Pi
@@ -277,6 +274,8 @@ module sed_vars
     end type channelBebAttrib
     type(channelBebAttrib), dimension(:), allocatable  :: cba
 
+    integer, dimension(:), allocatable :: riverType !< River type
+
     integer :: NSOIL !< Number of soil types
     type soilAttrib !< Contains soil type attributes
         real, dimension(nsedpar) :: frac !< Fractions of each sediment class in the soil
@@ -290,6 +289,12 @@ module sed_vars
         real :: fallHeight, dropDiam, percDrip !< Properties of vegetation types
     end type vegeAttrib
     type(vegeAttrib), dimension(:), allocatable :: va
+
+    integer :: NRIVT !< Number of river types
+    type :: riverTypeParam !< Contains hydraulics parameters
+        real :: a, b !< a*(Q^b)
+    end type riverTypeParam
+    type(riverTypeParam), dimension(:), allocatable :: rtp, rtpc 
 
     type :: chbedlayer !< Contains channel bed layer attributes
         real :: thick, D16, D50, D84, D99 !< Bed layer thickness and most representative diameters
